@@ -1,4 +1,4 @@
-#include <C:\Users\Owner\Quadcopter\quadcopter.c>
+//#include "quadcopter.cpp"
 
 void setup()
 {
@@ -16,7 +16,7 @@ void setup()
        PWMOutput(_PIN10PWM, i / 1023.0 * 0.09 + 0.02);
        pi = i;
     }
-}
+  }
 }
 
 void loop(){}
