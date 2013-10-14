@@ -1,13 +1,16 @@
-#include "quadcopter.h"
-#include <avr/delay.h>
-#include <avr/interrupt.h>
-#include <Arduino.h>
+#ifndef QUADCOPTER_CPP_INCLUDED
+#define QUADCOPTER_CPP_INCLUDED
+
+//I'm only going to comment on the first function of each group. The only difference is changing the affected port.
 
 void setDirection(enum BPin p, enum Direction d)
 {
+	//checks if the direction is input or output
 	if(d == _INPUT)
-		DDRB &= ~p;
+		//if input, makes the bit corresponding to the desired pin 0 while leaving the rest unaffected.
+		DDRB &= ~p; //if affecting PB5 (_PIN9), p will have a value of 0b00100000 making it convenient for this operation.
 	else
+		//if output, makes the bit corresponding to the desired pin 1 while leaving the rest unaffected.
 		DDRB |= p;
 }
 
@@ -38,16 +41,19 @@ void setDirection(enum EPin p, enum Direction d)
 void setDirection(enum FPin p, enum Direction d)
 {
 	if(d == _INPUT)
-		DDRF &= ~p;
+		DDRF &= ~(1 << p);//different because of analog to digital conversion
 	else
-		DDRF |= p;
+		DDRF |= (1 << p);//different because of analog to digital conversion
 }
 
 void digitalOutput(enum BPin p, enum Voltage v)
 {
+	//checks if the voltage should be high or low.
 	if(v == _LOW)
-		PORTB &= ~p;
+		//if low, makes the bit corresponding to the desired pin 0 while leaving the rest unaffected.
+		PORTB &= ~p;//if affecting PB5 (_PIN9), p will have a value of 0b00100000 making it convenient for this operation.
 	else
+		//if high, makes the bit corresponding to the desired pin 1 while leaving the rest unaffected.
 		PORTB |= p;
 }
 
@@ -78,129 +84,123 @@ void digitalOutput(enum EPin p, enum Voltage v)
 void digitalOutput(enum FPin p, enum Voltage v)
 {
 	if(v == _LOW)
-		PORTF &= ~p;
+		PORTF &= ~(1 << p);//different because of analog to digital conversion
 	else
-		PORTF |= p;
+		PORTF |= (1 << p);//different because of analog to digital conversion
 }
 
 unsigned int digitalInput(enum BPin p)
 {
-	if(PINB & p)
-		return 1;
-	else
-		return 0;
+	//anding PINB and p gives 0 if the the corresponding pin is low and the value of p if it is high. not-equaling it with zero makes it always 1 or 0. 
+	return (PINB & p) != 0;
 }
 
 unsigned int digitalInput(enum CPin p)
 {
-	if(PINC & p)
-		return 1;
-	else
-		return 0;
+	return (PINC & p) != 0;
 }
 
 unsigned int digitalInput(enum DPin p)
 {
-	if(PIND & p)
-		return 1;
-	else
-		return 0;
+	return (PIND & p) != 0;
 }
 
 unsigned int digitalInput(enum EPin p)
 {
-	if(PINE & p)
-		return 1;
-	else
-		return 0;
+	return (PINE & p) != 0;
 }
 
 unsigned int digitalInput(enum FPin p)
 {
-	if(PINF & p)
-		return 1;
-	else
-		return 0;
+	return (PINF & (1 << p)) != 0;//different because of analog to digital conversion
 }
 
-int initializePWM(unsigned int frequency)
+unsigned int initializePWM(double frequency)
 {
-	if(frequency > 1000000 || frequency < 1)
+	//if the frequency is out of range, return a -1. Just an error check.
+	if(frequency > MAX_PWM_FREQUENCY || frequency <= 0)
 		return -1;
-		
-	unsigned int prescaler;
-	if(frequency > 31)
-		prescaler = 8;
-	else if(frequency > 4)
-		prescaler = 64;
-	else
-		prescaler = 256;
-		
-	maxDuty = 16000000 / (frequency * prescaler);
 	
-	TCCR1A = 0b00000010;
-	TCCR3A = 0b00000010;
+	//Selects the smallest prescaler for the frequency. The smallest prescaler means the highest resolution
+	unsigned int prescaler;
+	if(frequency > F_CPU / 524288L)
+		prescaler = 8;
+	else if(frequency > F_CPU / 4194304L)
+		prescaler = 64;
+	else if(frequency > F_CPU / 16777216L)
+		prescaler = 256;
+	else
+		prescaler = 1024;
+	
+	//calculates the value the counter should reach before resetting (rounded to the nearest integer)
+	maxDuty = (unsigned int)(F_CPU / (frequency * prescaler) + 0.5);
+	
+	//clears any interrupts from the timers
+	TIMSK1 = 0b00000000;
+	TIMSK3 = 0b00000000;
+	
+	TCCR1A = 0b00000010;//disconnects output to all Timer/Counter1 pins (Bit 7:2), sets the waveform generation mode to mode 14 (FastPWM with ICR1 as the top value) (Bit 1:0)
+	TCCR3A = 0b00000010;//same as above but for Timer/Counter3
 	
 	if(prescaler == 8)
 	{
-		TCCR1B = 0b00011010;
-		TCCR3B = 0b00011010;
+		TCCR1B = 0b00011010;//Turns off noise cancellation and input capture edge select (only applicable to input) (Bit 7:6), Bit 5 is reserved, sets the waveform generation mode to mode 14 (FastPWM with ICR1 as the top value) (Bit 4:3), and sets the appropriate prescaler.
+		TCCR3B = 0b00011010;//same as above but for Timer/Counter3
 	}
-	else if(prescaler == 64)
+	else if(prescaler == 64)//the following conditions are the same as the previous condition but with a different prescalers;
 	{
 		TCCR1B = 0b00011011;
 		TCCR3B = 0b00011011;
 	}
-	else
+	else if(prescaler == 256)
 	{
 		TCCR1B = 0b00011100;
 		TCCR3B = 0b00011100;
 	}
+	else
+	{
+		TCCR1B = 0b00011101;
+		TCCR3B = 0b00011101;
+	}
 	
-	TCCR1C = 0b00000000;
-	TCCR3C = 0b00000000;
 	
+	//The following chunk sets 16-bit registers
 	unsigned char sreg;
+	sreg = SREG;//saves the interrupt state
+	cli();//avr function that clears all the interrupts
+	ICR1 = maxDuty;//sets the top counter value for Timer/Counter1
+	ICR3 = maxDuty;//and Timer/Counter3 
+	SREG = sreg;//sets the original interrupt state
 	
-	sreg = SREG;
-	cli();
-	ICR1 = maxDuty;
-	ICR3 = maxDuty;
-	SREG = sreg;
-	
-	TIMSK1 = 0b00000000;
-	TIMSK3 = 0b00000000;
-	
+	//success
 	return 0;
 }
 
-void PWMOutput(enum PWM16Bit p, double duty)
+void PWMOutput(enum PWM_TC1 p, double duty)
 {
+	//if duty is between 1 and 0 it is good, otherwise set it to the closest edge
 	if(duty > 1.0)
 		duty = 1.0;
 	else if(duty < 0.0)
 		duty = 0.0;
 	
+	//find the value that represents the closest value to the desired duty cycle (rounded to the nearest integer)
 	unsigned int val = (unsigned int)(duty * maxDuty + 0.5);
-	unsigned char sreg;
 	
+	unsigned char sreg;
 	if(p == _PIN9PWM)
 	{
-		sreg = SREG;
-		cli();
-		OCR1A = val;
-		SREG = sreg;
-		TCCR1A |= p;
-		TCCR1A &= ~(p >> 1);
+		sreg = SREG;//saves the interrupt state
+		cli();//avr function that clears all the interrupts
+		OCR1A = val; //sets the compare value
+		SREG = sreg;//sets the original interrupt state
 	}
-	else if(p == _PIN10PWM)
+	else if(p == _PIN10PWM)//Same for the following conditions
 	{
 		sreg = SREG;
 		cli();
 		OCR1B = val;
 		SREG = sreg;
-		TCCR1A |= p;
-		TCCR1A &= ~(p >> 1);
 	}
 	else if(p == _PIN11PWM)
 	{
@@ -208,24 +208,122 @@ void PWMOutput(enum PWM16Bit p, double duty)
 		cli();
 		OCR1C = val;
 		SREG = sreg;
-		TCCR1A |= p;
-		TCCR1A &= ~(p >> 1);
 	}
-	else if(p == _PIN5PWM)
+	
+	TCCR1A |= p;//sets one bit high
+	TCCR1A &= ~(p >> 1);//and one bit low (0b10 means that the pin is low until the compare value is reached, then it's high)
+}
+
+void PWMOutput(enum PWM_TC3 p, double duty)
+{
+	if(duty > 1.0)
+		duty = 1.0;
+	else if(duty < 0.0)
+		duty = 0.0;
+	
+	unsigned int val = (unsigned int)(duty * maxDuty + 0.5);
+	
+	unsigned char sreg;
+	if(p == _PIN5PWM)
 	{
 		sreg = SREG;
 		cli();
 		OCR3A = val;
 		SREG = sreg;
-		TCCR3A |= 0b10000000;
-		TCCR3A &= 0b10111111;
 	}
+	
+	TCCR3A |= p;
+	TCCR3A &= ~(p >> 1);
 }
 
-void stopPWM(enum PWM16Bit p)
+void stopPWM(enum PWM_TC1 p)
 {
-	if(p == _PIN9PWM || p == _PIN10PWM || p == _PIN11PWM)
-		TCCR1A &= ~p;
-	else if(p == _PIN5PWM)
-		TCCR3A &= 0b01111111;
+	TCCR1A &= ~p;//disconnects the wave generator
 }
+
+void stopPWM(enum PWM_TC3 p)
+{
+	TCCR3A &= ~p;
+}
+
+float analogInput(enum FPin p)
+{
+	//Disables the digital input buffer on the corresponding pin; reduces power consumption and makes a cleaner reading
+	DIDR0 |= 1 << p;
+	
+	//Writing 0 to bit 0 allows power to go to the ADC
+	PRR0 &= ~ 0b1;
+	
+	//bits 6 & 7 indicate that the reference voltage will be the +5 from the chip. Nothing needs to be plugged into AREF
+	//bit 5 indicates the result will have the two highest bits in ADCH and the rest in ADL
+	//bit 4 does nothing and will always be zero
+	//bits 0 to 3 select which pin the ADC will read from (determined by p)
+	ADMUX = 0b01000000 | p;
+	
+	//bit 7 enables the ADC. Once you're done using the ADC this should theoretically be turned off (and then bit 0 on PRR should be turned on)
+	//bit 6 starts the ADC. It will be reset once the operation is complete.
+	//bits 3, 4, and 5 deal with interrupts and such
+	//bits 0, 1, and 2 determine the clock frequency. 100 means once every 16 clock cycles. This is the fastest frequency with high resolution. 8 and 4 are okay. 2 is bad.
+	ADCSRA = 0b11000100;
+	
+	//wait until the operation is done
+	while(ADCSRA & 0b01000000);
+	
+	//The first one doesn't give good results
+	ADCSRA = 0b11000100;
+	
+	//wait until the operation is done
+	while(ADCSRA & 0b01000000);
+	
+	//Allow access to digital input again. (In case you decide to switch to digital?)
+	DIDR0 &= ~ (1 << p);
+	
+	ADCSRA = 0b00000100;
+	
+	unsigned int result;
+	
+	//The following chunk sets 16-bit registers
+	unsigned char sreg;
+	sreg = SREG;//saves the interrupt state
+	cli();//avr function that clears all the interrupts
+	result = ADC;
+	SREG = sreg;//sets the original interrupt state
+	
+	//ADC is divided by 1023 to make the result a percentage and multiplied by +5 volts.
+	return (result * 5) / 1023.0f;
+}
+
+float analogInput(enum FPin p, float AREFVoltage)
+{
+	DIDR0 |= 1 << p;
+	
+	PRR0 &= ~ 0b1;
+	
+	//bits 6 & 7 indicate that the reference voltage will be plugged into AREF
+	ADMUX = 0b00000000 | p;
+	
+	ADCSRA = 0b11000100;
+	
+	while(ADCSRA & 0b01000000);
+	
+	ADCSRA = 0b11000100;
+	
+	while(ADCSRA & 0b01000000);
+	
+	DIDR0 &= ~ (1 << p);
+	
+	ADCSRA = 0b00000100;
+	
+	unsigned int result;
+	
+	unsigned char sreg;
+	sreg = SREG;
+	cli();
+	result = ADC;
+	SREG = sreg;
+	
+	//ADC is divided by 1023 to make the result a percentage and multiplied by AREFVoltage.
+	return (result * AREFVoltage) / 1023.0f;
+}
+
+#endif
