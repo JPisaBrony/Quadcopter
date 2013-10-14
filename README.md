@@ -5,8 +5,8 @@ If you want to get added to the repository, contact Josh Pohl (jdpohl789@gmail.c
 
 Contributors
 ==========
-Programmers
-==========
+Programmers:
+
 Josh Pohl
 
 Victor Grounds
