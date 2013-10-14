@@ -1,3 +1,11 @@
-Quadcopter
+Quadcopter Century College Engeneering
 ==========
-This is a message TEST 2:56 10/11/2013
+
+If you want to get added to the repository, contact Josh Pohl (jdpohl789@gmail.com).
+
+Contributors
+-----------------------------------------
+Programmers:
+Josh Pohl
+Victor Grounds
+Eric Madson
