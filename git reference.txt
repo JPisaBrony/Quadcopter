@@ -1,0 +1,13 @@
+make sure to add "git" in front of everything
+
+status
+checks what is going on in your folder
+
+add .
+adds everything you changed to the que for commiting
+
+commit
+commits your changes
+
+push
+pushes your changes to the repository
