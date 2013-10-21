@@ -11,3 +11,12 @@ commits your changes
 
 push
 pushes your changes to the repository
+
+stash
+stashes your changes
+
+stash drop
+drops your stash
+
+stash apply
+applys your stash
