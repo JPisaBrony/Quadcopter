@@ -11,4 +11,4 @@ Josh Pohl
 
 Victor Grounds
 
-Eric Madson
+Erik Madson
