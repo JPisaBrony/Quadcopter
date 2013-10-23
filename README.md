@@ -13,7 +13,7 @@ Do the configs displayed here
 
 	http://git-scm.com/book/en/Customizing-Git-Git-Configuration
 
-To download the repository to your local machine, (using the git command line) run the command
+Download the repository to your local machine, (using the git command line) run the command
 
 	git clone https://github.com/JPisaBrony/Quadcopter/commits/master
 
@@ -22,8 +22,8 @@ Contributors
 ==========
 Programmers:
 
-Josh Pohl
+Josh Pohl (twilight sparkle)
 
-Victor Grounds
+Victor Grounds (applejack)
 
-Erik Madson
+Erik Madson (fluttershy)
