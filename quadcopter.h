@@ -11,6 +11,9 @@
 //The highest value initializePWM will take as a value
 #define MAX_PWM_FREQUENCY 1000000l
 
+//The value to be used in TWBR (should be greater than 10 if the prescaler in TWSR is 0, 3 if 1, or 1 if 2 or 3)
+#define I2C_BIT_RATE 100;
+
 //These enums' values correspond to the bit in the DDRX, PORTX, and PINX registers that is associated with that pin
 enum BPin {_SS = 0b00000001, _SCK = 0b00000010, _MOSI = 0b00000100, _MI = 0b00001000, _PIN8 = 0b00010000, _PIN9 = 0b00100000, _PIN10 = 0b01000000, _PIN11 = 0b10000000};
 enum CPin {_PIN5 = 0b01000000, _PIN13 = 0b10000000};
@@ -105,6 +108,26 @@ requires the pin to be set as input
 */
 float analogInput(enum FPin p);
 float analogInput(enum FPin p, float AREFVoltage);
+
+/*
+Writes to a slave device connected by an I2C connection. Also referred to as a two wire interface.
+The address is the 7 bit number that identifies the slave. Separate from the read/write bit (0x1E becomes 0x3C and 0x3D with the read or write bit included. address wants 0x1E). (address << 1) | readWrite
+buffer is the array containing the values that will be written to the slave device.
+length is the number of values from buffer to write to the slave device. Undefined results if length is greater than the actual length of the array.
+
+returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
+*/
+int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length);
+
+/*
+Reads from a slave device connected by an I2C connection. Also referred to as a two wire interface.
+The address is the 7 bit number that identifies the slave. Separate from the read/write bit (0x1E becomes 0x3C and 0x3D with the read or write bit included. address wants 0x1E). (address << 1) | readWrite
+buffer is the array that read values will be written into.
+length is the number of values from buffer to read from the slave device. Undefined results if length is greater than the actual length of the array.
+
+returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
+*/
+int readI2C(unsigned char address, unsigned char buffer[], unsigned int length);
 
 #include "quadcopter.cpp"
 

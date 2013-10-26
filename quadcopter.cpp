@@ -91,7 +91,7 @@ void digitalOutput(enum FPin p, enum Voltage v)
 
 unsigned int digitalInput(enum BPin p)
 {
-	//anding PINB and p gives 0 if the the corresponding pin is low and the value of p if it is high. not-equaling it with zero makes it always 1 or 0. 
+	//anding PINB and p gives 0 if the the corresponding pin is low and the value of p if it is high. not-equalling it with zero makes it always 1 or 0. 
 	return (PINB & p) != 0;
 }
 
@@ -326,51 +326,76 @@ float analogInput(enum FPin p, float AREFVoltage)
 	return (result * AREFVoltage) / 1023.0f;
 }
 
-/*
-int sendI2CData(unsigned char data)
+int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 {
-	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
-	while(~(TWCR & (1<<TWINT)));
-	if((TWSR & 0xF8) != 0x08)
-		return -1;
-	TWDR = SLA_W;
-	TWCR = (1<<TWINT) | (1<<TWEN);
-	while (!(TWCR & (1<<TWINT)));
-	if ((TWSR & 0xF8) != 0x18)
-		return -2;
-	TWDR = DATA;
-	TWCR = (1<<TWINT) | (1<<TWEN);
-	while (!(TWCR & (1<<TWINT)));
-	if ((TWSR & 0xF8) != 0x28)
-		return -3;
-	TWCR = (1<<TWINT)|(1<<TWEN)| (1<<TWSTO);
-	return 0;
-}
-
-int sendI2CData(unsigned char buffer[])
-{
-	for(int i = 0; i < sizeof buffer; i++)
-		if(sendI2CData(buffer[i]))
-			i--;
-	return 0;
-}
-
-int sendI2CData(unsigned char buffer[], unsigned int numberOfFailures)
-{
-	unsigned int failCount = 0;
-	for(int i = 0; i < sizeof buffer; i++)
+	unsigned char statusCode;//contains the masked status code after each step
+	TWCR = 0b00000000;//clears the control register; don't know why exactly. bit 7 should be 0 before messing with the registers, however
+	TWBR = I2C_BIT_RATE;//Set the bit rate. not really necessary, assuming it has been set before
+	TWCR = 0b11100100;//a 1 needs to be written to the interrupt flag (bit 7) in order to clear it (counter-intuitive); this is the software telling the hardware it is ready for the hardware to take action; also sets the acknowledge bit, start bit and the TWI enable bit.
+	
+	while(!(TWCR & 0b10000000));//wait until the hardware is done with it's actions. Bit 7 will remain low until it is done.
+	statusCode = (TWSR & 0xF8);//mask the status register,
+	if(statusCode != 0x08 && statusCode != 0x10)//check that it is the appropriate value for the transmission; here it checks that a START or REPEATED START was sent
+		return statusCode;//if it isn't return the bad status code
+	TWDR = (address << 1) & 0xFE;//If everything is okay, load the address and write bit. (masking 0xFE is the same as setting bit 0 to 0);
+	TWCR = 0b11000100;//Start the hardware again (no start bit this time. otherwise it will send a repeated start when control goes to the hardware
+	
+	while(!(TWCR & 0b10000000));//wait for the hardware to finish
+	statusCode = (TWSR & 0xF8);//mask the status
+	if(statusCode != 0x18)//if address was sent and an ACK was received continue otherwise return the statusCode
+		return statusCode;
+		
+	for(int i = 0; i < length; i++)//loop though the number of values specified by the parameter "length"
 	{
-		if(sendI2CData(buffer[i]))
-		{
-			i--;
-			failCount++;
-		}
-		else
-			failCount = 0;
-		if(failCount == numberOfFailures)
-			return -1;
+		TWDR = buffer[i];//load the data into the Data Register
+		TWCR = 0b11000100;//give control to the hardware
+		while(!(TWCR & 0b10000000));//and wait until it is done
+		statusCode = (TWSR & 0xF8);
+		if(statusCode != 0x28)//if data was sent and acknowledge received, continue to the next iteration or end
+			return statusCode;
 	}
-	return 0;
+	
+	TWCR = 0b11010100;//send a stop signal
+	return 1;//if everything happened as expected, return 1
 }
-//*/
+
+int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
+{
+	unsigned char statusCode;//contains the masked status code after each step
+	TWCR = 0b00000000;//clears the control register; don't know why exactly. bit 7 should be 0 before messing with the registers, however
+	TWBR = I2C_BIT_RATE;//Set the bit rate. not really necessary, assuming it has been set before
+	TWCR = 0b11100100;//a 1 needs to be written to the interrupt flag (bit 7) in order to clear it (counter-intuitive); this is the software telling the hardware it is ready for the hardware to take action; also sets the acknowledge bit, start bit and the TWI enable bit.
+	
+	while(!(TWCR & 0b10000000));//wait until the hardware is done with it's actions. Bit 7 will remain low until it is done.
+	statusCode = (TWSR & 0xF8);//mask the status register,
+	if(statusCode != 0x08 && statusCode != 0x10)//check that it is the appropriate value for the transmission; here it checks that a START or REPEATED START was sent
+		return statusCode;//if it isn't return the bad status code
+	TWDR = (address << 1) | 0x01;//If everything is okay, load the address and read bit (bit 0 is 1).
+	TWCR = 0b11000100;//Start the hardware again (no start bit this time. otherwise it will send a repeated start when control goes to the hardware
+	
+	while(!(TWCR & 0b10000000));//wait for the hardware to finish
+	statusCode = (TWSR & 0xF8);//mask the status
+	if(statusCode != 0x40)//if address was sent and an ACK was received continue otherwise return the statusCode
+		return statusCode;
+		
+	for(int i = 0; i < length - 1; i++)//loop though the number of values specified by the parameter "length"
+	{
+		TWCR = 0b11000100;//give control to the hardware
+		while(!(TWCR & 0b10000000));//and wait until it is done
+		statusCode = (TWSR & 0xF8);
+		if(statusCode != 0x50)//if data was received and acknowledge sent, continue to the next iteration or end
+			return statusCode;
+		buffer[i] = TWDR;//load the data from the Data Register into the buffer
+	}
+	TWCR = 0b10000100;//give control to the hardware, but this time there'll be a NACK sent instead of the ACK
+	
+	while(!(TWCR & 0b10000000));//and wait until it is done
+	statusCode = (TWSR & 0xF8);
+	if(statusCode != 0x58)//if data was received and no acknowledge sent, continue
+		return statusCode;
+	buffer[length - 1] = TWDR;//read the last byte
+	
+	TWCR = 0b11010100;//send a stop signal
+	return 1;//if everything happened as expected, return 1
+}
 #endif
