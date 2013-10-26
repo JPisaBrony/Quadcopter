@@ -326,11 +326,24 @@ float analogInput(enum FPin p, float AREFVoltage)
 	return (result * AREFVoltage) / 1023.0f;
 }
 
+void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode)
+{
+	//set the bit rate
+	TWBR = bitRateValue;
+	TWSR = bitRatePrescaler & 0x03;
+	
+	unsigned char writeBuffer[4] = {0, compassConfigurationA, compassConfigurationB, compassMode};
+	
+	//write the configuration to the compass's first three registers
+	writeI2C(0x1E, writeBuffer, 3);
+	
+	//more configuration when more sensors are implemented
+}
+	
+
 int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 {
 	unsigned char statusCode;//contains the masked status code after each step
-	TWCR = 0b00000000;//clears the control register; don't know why exactly. bit 7 should be 0 before messing with the registers, however
-	TWBR = I2C_BIT_RATE;//Set the bit rate. not really necessary, assuming it has been set before
 	TWCR = 0b11100100;//a 1 needs to be written to the interrupt flag (bit 7) in order to clear it (counter-intuitive); this is the software telling the hardware it is ready for the hardware to take action; also sets the acknowledge bit, start bit and the TWI enable bit.
 	
 	while(!(TWCR & 0b10000000));//wait until the hardware is done with it's actions. Bit 7 will remain low until it is done.
@@ -362,8 +375,6 @@ int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 {
 	unsigned char statusCode;//contains the masked status code after each step
-	TWCR = 0b00000000;//clears the control register; don't know why exactly. bit 7 should be 0 before messing with the registers, however
-	TWBR = I2C_BIT_RATE;//Set the bit rate. not really necessary, assuming it has been set before
 	TWCR = 0b11100100;//a 1 needs to be written to the interrupt flag (bit 7) in order to clear it (counter-intuitive); this is the software telling the hardware it is ready for the hardware to take action; also sets the acknowledge bit, start bit and the TWI enable bit.
 	
 	while(!(TWCR & 0b10000000));//wait until the hardware is done with it's actions. Bit 7 will remain low until it is done.
@@ -398,4 +409,30 @@ int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 	TWCR = 0b11010100;//send a stop signal
 	return 1;//if everything happened as expected, return 1
 }
+
+int readMagneticCompass(int axes[])
+{
+	unsigned char writeBuffer[1] = {3};
+	unsigned char readBuffer[6];
+	int statusCode = writeI2C(0x1E, writeBuffer, 1);//Write so that the following read begins from register 3 (the 3 comes from what writeBuffer is initialized to);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	statusCode = readI2C(0x1E, readBuffer, 6);//read registers 3 through 8
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	axes[0] = twoCharToInt(readBuffer[0], readBuffer[1]);//Store x data
+	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]);//Store y data (note that it is coming from 4 and 5)
+	axes[2] = twoCharToInt(readBuffer[2], readBuffer[3]);//Store z data (note that it is coming from 2 and 3)
+	return 1;
+}
+
+int twoCharToInt(unsigned char high, unsigned char low)
+{
+	int16_t val = high;//val is the 16 bit value used (so that the sign bit comes out right); put high in
+	val <<= 8;//shift high over to the upper 8 bits
+	val |= low;//or in low
+	int result = val;//move the result to an int (preserving the sign bit)
+	return result;//return the int
+}
+
 #endif
