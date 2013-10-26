@@ -1,9 +1,12 @@
 //Register definitions for Spark Fun 9 DOF Sensor Stick
 //Product number SEN-10724
-//Writen by Victor Grounds
+//Written by Victor Grounds
+
+#ifndef SENSTICK_H
+#define SENSTICK_H
 
 //HMC5883L 3-Axis Digital Compass
-#ifndef magWrite
+#define magAddress 0x1E
 #define magWrite 0x3C
 #define magRead 0x3D
 #define magCRA 0x00
@@ -21,6 +24,8 @@
 #define magIDC 0x0C
 
 //ADXL345 3-Axis Digital Accelerometer
+#define accelAddress 0x1D
+#define accelAltAddress 0x53
 #define accelWrite 0x3A
 #define accelRead 0x3B
 #define accelTHRESH_TAP 0x1D
@@ -54,6 +59,8 @@
 #define accelFIFO_STATUS 0x39
 
 //ITG-3200 3-Axis Gyro
+#define gyroAddress 0x68
+#define gyroAltAddress 0x69
 #define gyroWHO_AM_I 0x00
 #define gyroSMPLRT_DIV 0x15
 #define gyroDLPF_FS 0x16
@@ -68,3 +75,5 @@
 #define gyroZoutH 0x21
 #define gyroZoutL 0x22
 #define gyroPWR_MGM 0x3E
+
+#endif

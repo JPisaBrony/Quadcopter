@@ -335,7 +335,7 @@ void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, u
 	unsigned char writeBuffer[4] = {0, compassConfigurationA, compassConfigurationB, compassMode};
 	
 	//write the configuration to the compass's first three registers
-	writeI2C(0x1E, writeBuffer, 3);
+	writeI2C(magAddress, writeBuffer, 3);
 	
 	//more configuration when more sensors are implemented
 }
@@ -412,12 +412,12 @@ int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 
 int readMagneticCompass(int axes[])
 {
-	unsigned char writeBuffer[1] = {3};
+	unsigned char writeBuffer[1] = {magXoutH};
 	unsigned char readBuffer[6];
-	int statusCode = writeI2C(0x1E, writeBuffer, 1);//Write so that the following read begins from register 3 (the 3 comes from what writeBuffer is initialized to);
+	int statusCode = writeI2C(magAddress, writeBuffer, 1);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	statusCode = readI2C(0x1E, readBuffer, 6);//read registers 3 through 8
+	statusCode = readI2C(magAddress, readBuffer, 6);//read the 6 registers starting at magXoutH
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	axes[0] = twoCharToInt(readBuffer[0], readBuffer[1]);//Store x data
