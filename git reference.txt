@@ -4,7 +4,7 @@ status
 checks what is going on in your folder
 
 add .
-adds everything you changed to the que for commiting
+adds everything you changed to the queue for committing
 
 commit
 commits your changes
@@ -19,4 +19,4 @@ stash drop
 drops your stash
 
 stash apply
-applys your stash
+applies your stash

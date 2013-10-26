@@ -326,20 +326,28 @@ float analogInput(enum FPin p, float AREFVoltage)
 	return (result * AREFVoltage) / 1023.0f;
 }
 
+int twoCharToInt(unsigned char high, unsigned char low)
+{
+	int16_t val = high;//val is the 16 bit value used (so that the sign bit comes out right); put high in
+	val <<= 8;//shift high over to the upper 8 bits
+	val |= low;//or in low
+	int result = val;//move the result to an int (preserving the sign bit)
+	return result;//return the int
+}
+
 void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode)
 {
 	//set the bit rate
 	TWBR = bitRateValue;
 	TWSR = bitRatePrescaler & 0x03;
 	
-	unsigned char writeBuffer[4] = {0, compassConfigurationA, compassConfigurationB, compassMode};
+	unsigned char writeBuffer[4] = {magCRA, compassConfigurationA, compassConfigurationB, compassMode};//Starting at magCRA, write the values passed in to the registers in the magnetic compass
 	
 	//write the configuration to the compass's first three registers
 	writeI2C(magAddress, writeBuffer, 3);
 	
 	//more configuration when more sensors are implemented
 }
-	
 
 int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 {
@@ -426,13 +434,35 @@ int readMagneticCompass(int axes[])
 	return 1;
 }
 
-int twoCharToInt(unsigned char high, unsigned char low)
+int readAccelerometer(int axes[])
 {
-	int16_t val = high;//val is the 16 bit value used (so that the sign bit comes out right); put high in
-	val <<= 8;//shift high over to the upper 8 bits
-	val |= low;//or in low
-	int result = val;//move the result to an int (preserving the sign bit)
-	return result;//return the int
+	unsigned char writeBuffer[1] = {accelXoutL};
+	unsigned char readBuffer[6];
+	int statusCode = writeI2C(accelAddress, writeBuffer, 1);//Write so that the following read begins from register accelXoutL (the accelXoutL comes from what writeBuffer is initialized to);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	statusCode = readI2C(accelAddress, readBuffer, 6);//read the 6 registers starting at accelXoutL
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	axes[0] = twoCharToInt(readBuffer[1], readBuffer[0]);//Store x data
+	axes[1] = twoCharToInt(readBuffer[3], readBuffer[2]);//Store y data
+	axes[2] = twoCharToInt(readBuffer[5], readBuffer[4]);//Store z data
+	return 1;
 }
 
+int readGyroscope(int axes[])
+{
+	unsigned char writeBuffer[1] = {gyroXoutH};
+	unsigned char readBuffer[6];
+	int statusCode = writeI2C(gyroAddress, writeBuffer, 1);//Write so that the following read begins from register gyroXoutH (the gyroXoutH comes from what writeBuffer is initialized to);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	statusCode = readI2C(gyroAddress, readBuffer, 6);//read the 6 registers starting at gyroXoutH
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	axes[0] = twoCharToInt(readBuffer[1], readBuffer[0]);//Store x data
+	axes[1] = twoCharToInt(readBuffer[3], readBuffer[2]);//Store y data
+	axes[2] = twoCharToInt(readBuffer[5], readBuffer[4]);//Store z data
+	return 1;
+}
 #endif

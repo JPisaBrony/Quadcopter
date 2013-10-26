@@ -107,6 +107,11 @@ float analogInput(enum FPin p);
 float analogInput(enum FPin p, float AREFVoltage);
 
 /*
+Converts two chars into a signed int.
+*/
+int twoCharToInt(unsigned char high, unsigned char low);
+
+/*
 Configures the TWI bit rate as well as the registers in the various sensors connected to the TWI. Corresponds to registers in the datasheets.
 */
 void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode);
@@ -138,9 +143,16 @@ Important that the array passed has at least 3 elements or else undefined things
 int readMagneticCompass(int axes[]);
 
 /*
-Converts two chars into a signed int.
+Reads from the accelerometer. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
+Important that the array passed has at least 3 elements or else undefined things may occur in the program.
 */
-int twoCharToInt(unsigned char high, unsigned char low);
+int readAccelerometer(int axes[]);
+
+/*
+Reads from the gyroscope. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
+Important that the array passed has at least 3 elements or else undefined things may occur in the program.
+*/
+int readGyroscope(int axes[]);
 
 #include "quadcopter.cpp"
 
