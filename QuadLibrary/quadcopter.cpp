@@ -460,9 +460,9 @@ int readGyroscope(int axes[])
 	statusCode = readI2C(gyroAddress, readBuffer, 6);//read the 6 registers starting at gyroXoutH
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	axes[0] = twoCharToInt(readBuffer[1], readBuffer[0]);//Store x data
-	axes[1] = twoCharToInt(readBuffer[3], readBuffer[2]);//Store y data
-	axes[2] = twoCharToInt(readBuffer[5], readBuffer[4]);//Store z data
+	axes[0] = twoCharToInt(readBuffer[0], readBuffer[1]);//Store x data
+	axes[1] = twoCharToInt(readBuffer[2], readBuffer[3]);//Store y data
+	axes[2] = twoCharToInt(readBuffer[4], readBuffer[5]);//Store z data
 	return 1;
 }
 #endif
