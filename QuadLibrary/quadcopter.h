@@ -115,7 +115,7 @@ int twoCharToInt(unsigned char high, unsigned char low);
 Configures the TWI bit rate as well as the registers in the various sensors connected to the TWI. Corresponds to registers in the datasheets.
 */
 //TODO Write descriptions for the parameters as it pertains to the quadcopter with default values and recommended values
-void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode, unsigned char accelerometerRate, unsigned char acclerometerPowerCTL, unsigned char acclerometerDataFormat, unsigned char accelerometerFIFOMode, unsigned char gyroSampleRateDivider, unsigned char gyroDLPF)
+void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode, unsigned char accelerometerRate, unsigned char acclerometerPowerCTL, unsigned char acclerometerDataFormat, unsigned char accelerometerFIFOMode, unsigned char gyroSampleRateDivider, unsigned char gyroDLPF);
 
 /*
 Writes to a slave device connected by an I2C connection. Also referred to as a two wire interface.
