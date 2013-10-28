@@ -335,18 +335,43 @@ int twoCharToInt(unsigned char high, unsigned char low)
 	return result;//return the int
 }
 
-void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode)
+void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode, unsigned char accelerometerRate, unsigned char acclerometerPowerCTL, unsigned char acclerometerDataFormat, unsigned char accelerometerFIFOMode, unsigned char gyroSampleRateDivider, unsigned char gyroDLPF)
 {
-	//set the bit rate
+	//set the bit rate for the processor
 	TWBR = bitRateValue;
 	TWSR = bitRatePrescaler & 0x03;
 	
-	unsigned char writeBuffer[4] = {magCRA, compassConfigurationA, compassConfigurationB, compassMode};//Starting at magCRA, write the values passed in to the registers in the magnetic compass
+	unsigned char writeBuffer[4] = {magCRA, compassConfigurationA, compassConfigurationB, compassMode};
+	writeI2C(magAddress, writeBuffer, 4);//Starting at magCRA, write the values passed in to the registers in the magnetic compass
 	
-	//write the configuration to the compass's first three registers
-	writeI2C(magAddress, writeBuffer, 3);
+	writeBuffer[0] = 0;
+	writeI2C(magAddress, writeBuffer, 1);//write a zero to update the registers
 	
-	//more configuration when more sensors are implemented
+	writeBuffer[0] = accelBW_RATE;
+	writeBuffer[1] = accelerometerRate;
+	writeBuffer[2] = acclerometerPowerCTL;
+	writeI2C(accelAddress, writeBuffer, 3);//Starting at accelBW_RATE, write the values passed in to the registers in the accelerometer
+	
+	writeBuffer[0] = accelDATA_FORMAT;
+	writeBuffer[1] = acclerometerDataFormat;
+	writeI2C(accelAddress, writeBuffer, 2);//Starting at accelDATA_FORMAT, write the values passed in to the registers in the accelerometer
+	
+	writeBuffer[0] = accelFIFO_CTL;
+	writeBuffer[1] = accelerometerFIFOMode;
+	writeI2C(accelAddress, writeBuffer, 2);//Starting at accelFIFO_CTL, write the values passed in to the registers in the accelerometer
+	
+	writeBuffer[0] = 0;
+	writeI2C(accelAddress, writeBuffer, 1);//write a zero to update the registers
+	
+	writeBuffer[0] = gyroSMPLRT_DIV;
+	writeBuffer[1] = gyroSampleRateDivider;
+	writeBuffer[2] = gyroDLPF;
+	writeI2C(gyroAddress, writeBuffer, 3);//Starting at gyroSMPLRT_DIV, write the values passed in to the registers in the gyroscope
+	
+	writeBuffer[0] = 0;
+	writeI2C(gyroAddress, writeBuffer, 1);//write a zero to update the registers
+	
+	//more configuration if more sensors are implemented
 }
 
 int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length)
@@ -444,25 +469,31 @@ int readAccelerometer(int axes[])
 	statusCode = readI2C(accelAddress, readBuffer, 6);//read the 6 registers starting at accelXoutL
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	axes[0] = twoCharToInt(readBuffer[1], readBuffer[0]);//Store x data
-	axes[1] = twoCharToInt(readBuffer[3], readBuffer[2]);//Store y data
-	axes[2] = twoCharToInt(readBuffer[5], readBuffer[4]);//Store z data
+	axes[0] = twoCharToInt(readBuffer[1], readBuffer[0]);//Store x data (note that the low bit is read first)
+	axes[1] = twoCharToInt(readBuffer[3], readBuffer[2]);//Store y data (note that the low bit is read first)
+	axes[2] = twoCharToInt(readBuffer[5], readBuffer[4]);//Store z data (note that the low bit is read first)
 	return 1;
 }
 
 int readGyroscope(int axes[])
 {
-	unsigned char writeBuffer[1] = {gyroXoutH};
+	unsigned char writeBuffer[1] = {gyroTEMP_OUT_H};
 	unsigned char readBuffer[6];
-	int statusCode = writeI2C(gyroAddress, writeBuffer, 1);//Write so that the following read begins from register gyroXoutH (the gyroXoutH comes from what writeBuffer is initialized to);
+	int statusCode = writeI2C(gyroAddress, writeBuffer, 1);//Write so that the following read begins from register gyroTEMP_OUT_H (the gyroTEMP_OUT_H comes from what writeBuffer is initialized to);
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	statusCode = readI2C(gyroAddress, readBuffer, 6);//read the 6 registers starting at gyroXoutH
+	statusCode = readI2C(gyroAddress, readBuffer, 8);//read the 8 registers starting at gyroTEMP_OUT_H
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	axes[0] = twoCharToInt(readBuffer[0], readBuffer[1]);//Store x data
-	axes[1] = twoCharToInt(readBuffer[2], readBuffer[3]);//Store y data
-	axes[2] = twoCharToInt(readBuffer[4], readBuffer[5]);//Store z data
+		
+	int temperature = twoCharToInt(readBuffer[0], readBuffer[1]);
+		
+	axes[0] = twoCharToInt(readBuffer[2], readBuffer[3]);//Store x data
+	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]);//Store y data
+	axes[2] = twoCharToInt(readBuffer[6], readBuffer[7]);//Store z data
+	
+	//TODO manipulate the data so that it factors in temperature
+	
 	return 1;
 }
 #endif

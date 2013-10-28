@@ -114,7 +114,8 @@ int twoCharToInt(unsigned char high, unsigned char low);
 /*
 Configures the TWI bit rate as well as the registers in the various sensors connected to the TWI. Corresponds to registers in the datasheets.
 */
-void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode);
+//TODO Write descriptions for the parameters as it pertains to the quadcopter with default values and recommended values
+void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode, unsigned char accelerometerRate, unsigned char acclerometerPowerCTL, unsigned char acclerometerDataFormat, unsigned char accelerometerFIFOMode, unsigned char gyroSampleRateDivider, unsigned char gyroDLPF)
 
 /*
 Writes to a slave device connected by an I2C connection. Also referred to as a two wire interface.
@@ -139,19 +140,26 @@ int readI2C(unsigned char address, unsigned char buffer[], unsigned int length);
 /*
 Reads from the compass. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
 Important that the array passed has at least 3 elements or else undefined things may occur in the program.
+
+returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
 int readMagneticCompass(int axes[]);
 
 /*
 Reads from the accelerometer. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
 Important that the array passed has at least 3 elements or else undefined things may occur in the program.
+
+returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
 int readAccelerometer(int axes[]);
 
 /*
 Reads from the gyroscope. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
 Important that the array passed has at least 3 elements or else undefined things may occur in the program.
+
+returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
+//TODO Update the description when temperature becomes implemented
 int readGyroscope(int axes[]);
 
 #include "quadcopter.cpp"
