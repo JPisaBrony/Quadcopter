@@ -24,6 +24,6 @@ Programmers:
 
 Josh Pohl (twilight sparkle)
 
-Victor Grounds (applejack)
+Victor Grounds (pinkiepie)
 
 Erik Madson (fluttershy)
