@@ -166,7 +166,7 @@ Important that the array passed has at least 3 elements or else undefined things
 
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
-int readMagneticCompass(int axes[]);
+int readI2CCompass(int axes[]);
 
 /*
 Reads from the accelerometer. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
@@ -174,7 +174,7 @@ Important that the array passed has at least 3 elements or else undefined things
 
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
-int readAccelerometer(int axes[]);
+int readI2CAccelerometer(int axes[]);
 
 /*
 Reads from the gyroscope. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
@@ -183,7 +183,7 @@ Important that the array passed has at least 3 elements or else undefined things
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
 //TODO Update the description when temperature becomes implemented
-int readGyroscope(int axes[]);
+int readI2CGyroscope(int axes[]);
 
 #include "quadcopter.cpp"
 

@@ -597,7 +597,7 @@ int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 	return 1;//if everything happened as expected, return 1
 }
 
-int readMagneticCompass(int axes[])
+int readI2CCompass(int axes[])
 {
 	unsigned char writeBuffer[1] = {magXoutH};
 	unsigned char readBuffer[6];
@@ -613,8 +613,7 @@ int readMagneticCompass(int axes[])
 	return 1;
 }
 
-//TODO Test this
-int readAccelerometer(int axes[])
+int readI2CAccelerometer(int axes[])
 {
 	unsigned char writeBuffer[1] = {accelXoutL};
 	unsigned char readBuffer[6];
@@ -630,11 +629,10 @@ int readAccelerometer(int axes[])
 	return 1;
 }
 
-//TODO Test this
-int readGyroscope(int axes[])
+int readI2CGyroscope(int axes[])
 {
 	unsigned char writeBuffer[1] = {gyroTEMP_OUT_H};
-	unsigned char readBuffer[6];
+	unsigned char readBuffer[8];
 	int statusCode = writeI2C(gyroAddress, writeBuffer, 1);//Write so that the following read begins from register gyroTEMP_OUT_H (the gyroTEMP_OUT_H comes from what writeBuffer is initialized to);
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;

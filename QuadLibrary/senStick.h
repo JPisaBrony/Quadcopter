@@ -24,8 +24,8 @@
 #define magIDC 0x0C
 
 //ADXL345 3-Axis Digital Accelerometer
-#define accelAddress 0x1D
-#define accelAltAddress 0x53
+#define accelDefaultAddress 0x1D
+#define accelAddress 0x53//This is the alternate address. The sensor stick uses this one.
 #define accelWrite 0x3A
 #define accelRead 0x3B
 #define accelTHRESH_TAP 0x1D
