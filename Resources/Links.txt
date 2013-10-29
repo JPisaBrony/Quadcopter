@@ -1,0 +1,3 @@
+itg-3200 functions
+
+http://mbed.org/users/aberk/code/ITG3200/docs/b098d99dd81e//ITG3200_8cpp_source.html#l00199
