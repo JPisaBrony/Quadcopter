@@ -11,6 +11,10 @@
 //The highest value initializePWM will take as a value
 #define MAX_PWM_FREQUENCY 1000000l
 
+#define NUM_COMPASS_REGISTERS 13
+#define NUM_ACCELEROMETER_REGISTERS 58
+#define NUM_GYROSCOPE_REGISTERS 63
+
 //These enums' values correspond to the bit in the DDRX, PORTX, and PINX registers that is associated with that pin
 enum BPin {_SS = 0b00000001, _SCK = 0b00000010, _MOSI = 0b00000100, _MI = 0b00001000, _PIN8 = 0b00010000, _PIN9 = 0b00100000, _PIN10 = 0b01000000, _PIN11 = 0b10000000};
 enum CPin {_PIN5 = 0b01000000, _PIN13 = 0b10000000};
@@ -30,6 +34,11 @@ enum PWM_TC3 {_PIN5PWM = 0b00000000};
 
 //used in calculating PWM output, set in initializePWM
 unsigned int maxDuty;
+
+//used in initializePWM; Set values before calling
+unsigned int compassRegister[NUM_COMPASS_REGISTERS];
+unsigned int accelerometerRegister[NUM_ACCELEROMETER_REGISTERS];
+unsigned int gyroscopeRegister[NUM_GYROSCOPE_REGISTERS];
 
 /*
 The setDirection methods set each pin as either input or output.
@@ -112,10 +121,24 @@ Converts two chars into a signed int.
 int twoCharToInt(unsigned char high, unsigned char low);
 
 /*
-Configures the TWI bit rate as well as the registers in the various sensors connected to the TWI. Corresponds to registers in the datasheets.
+Configures the TWI bit rate. values less than 256 in compassRegister, accelerometerRegister, and gyroscopeRegister will be written to their corresponding register in the sensor stick
+
+Example for initialization:
+
+resetSetupRegisters();
+compassRegister[magCRA] = 0x10;
+initializeTWI(100, 0);
+
+Sets the TWBR register to 100 and Configuration Register A in the magnetic compass to 0x10.
+
+If resetSetupRegisters() is not called, zeros will be written to all the registers.
 */
-//TODO Write descriptions for the parameters as it pertains to the quadcopter with default values and recommended values
-void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode, unsigned char accelerometerRate, unsigned char acclerometerPowerCTL, unsigned char acclerometerDataFormat, unsigned char accelerometerFIFOMode, unsigned char gyroSampleRateDivider, unsigned char gyroDLPF);
+int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler);
+
+/*
+sets all the values in compassRegister, accelerometerRegister, and gyroscopeRegister to 256
+*/
+void resetSetupRegisters();
 
 /*
 Writes to a slave device connected by an I2C connection. Also referred to as a two wire interface.
