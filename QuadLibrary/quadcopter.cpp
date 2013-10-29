@@ -335,43 +335,195 @@ int twoCharToInt(unsigned char high, unsigned char low)
 	return result;//return the int
 }
 
-void initializeTWI(unsigned char bitRateValue, unsigned char bitRatePrescaler, unsigned char compassConfigurationA, unsigned char compassConfigurationB, unsigned char compassMode, unsigned char accelerometerRate, unsigned char acclerometerPowerCTL, unsigned char acclerometerDataFormat, unsigned char accelerometerFIFOMode, unsigned char gyroSampleRateDivider, unsigned char gyroDLPF)
+int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
 {
 	//set the bit rate for the processor
-	TWBR = bitRateValue;
-	TWSR = bitRatePrescaler & 0x03;
+	TWBR = TWIBitRate;
+	TWSR = TWIBitRatePrescaler & 0x03;
 	
-	unsigned char writeBuffer[4] = {magCRA, compassConfigurationA, compassConfigurationB, compassMode};
-	writeI2C(magAddress, writeBuffer, 4);//Starting at magCRA, write the values passed in to the registers in the magnetic compass
+	unsigned char statusCode;//contains the masked status code after each step
+	unsigned char writeBuffer[1] = {0};
+		
+	//Compass
 	
-	writeBuffer[0] = 0;
+	unsigned char index = 0;
+	
+	while(index < NUM_COMPASS_REGISTERS)//loop until all the registers have been checked
+	{
+		if(compassRegister[index] < 256)//if the value is too high, skip it
+		{
+			TWCR = 0b11100100;//a 1 needs to be written to the interrupt flag (bit 7) in order to clear it (counter-intuitive); this is the software telling the hardware it is ready for the hardware to take action; also sets the acknowledge bit, start bit and the TWI enable bit.
+	
+			while(!(TWCR & 0b10000000));//wait until the hardware is done with it's actions. Bit 7 will remain low until it is done.
+			statusCode = (TWSR & 0xF8);//mask the status register,
+			if(statusCode != 0x08 && statusCode != 0x10)//check that it is the appropriate value for the transmission; here it checks that a START or REPEATED START was sent
+				return statusCode;//if it isn't return the bad status code
+			TWDR = (magAddress << 1) & 0xFE;//If everything is okay, load the address and write bit. (masking 0xFE is the same as setting bit 0 to 0);
+			TWCR = 0b11000100;//Start the hardware again (no start bit this time. otherwise it will send a repeated start when control goes to the hardware
+
+			while(!(TWCR & 0b10000000));//wait for the hardware to finish
+			statusCode = (TWSR & 0xF8);//mask the status
+			if(statusCode != 0x18)//if address was sent and an ACK was received continue otherwise return the statusCode
+				return statusCode;
+		
+			TWDR = index;//load the register address into the Data Register
+			TWCR = 0b11000100;//give control to the hardware
+			while(!(TWCR & 0b10000000));//and wait until it is done
+			statusCode = (TWSR & 0xF8);
+			if(statusCode != 0x28)//if data was sent and acknowledge received, continue to the next iteration or end
+				return statusCode;
+		
+			for(; index < NUM_COMPASS_REGISTERS; index++)//loop through consecutive bytes that
+			{
+				if(compassRegister[index] < 256)//are less than 256
+				{
+					TWDR = compassRegister[index];//load the data into the Data Register
+					TWCR = 0b11000100;//give control to the hardware
+					while(!(TWCR & 0b10000000));//and wait until it is done
+					statusCode = (TWSR & 0xF8);
+					if(statusCode != 0x28)//if data was sent and acknowledge received, continue to the next iteration or end
+						return statusCode;
+				}
+				else//too big start a new transmission from the correct register
+				{
+					index++;
+					break;
+				}
+			}
+			TWCR = 0b11010100;//send a stop signal
+		}
+		else
+		{
+			index++;
+		}
+	}
+	
 	writeI2C(magAddress, writeBuffer, 1);//write a zero to update the registers
 	
-	writeBuffer[0] = accelBW_RATE;
-	writeBuffer[1] = accelerometerRate;
-	writeBuffer[2] = acclerometerPowerCTL;
-	writeI2C(accelAddress, writeBuffer, 3);//Starting at accelBW_RATE, write the values passed in to the registers in the accelerometer
+	//Accelerometer
 	
-	writeBuffer[0] = accelDATA_FORMAT;
-	writeBuffer[1] = acclerometerDataFormat;
-	writeI2C(accelAddress, writeBuffer, 2);//Starting at accelDATA_FORMAT, write the values passed in to the registers in the accelerometer
+	index = 0;
 	
-	writeBuffer[0] = accelFIFO_CTL;
-	writeBuffer[1] = accelerometerFIFOMode;
-	writeI2C(accelAddress, writeBuffer, 2);//Starting at accelFIFO_CTL, write the values passed in to the registers in the accelerometer
+	while(index < NUM_ACCELEROMETER_REGISTERS)
+	{
+		if(accelerometerRegister[index] < 256)
+		{
+			TWCR = 0b11100100;
 	
-	writeBuffer[0] = 0;
-	writeI2C(accelAddress, writeBuffer, 1);//write a zero to update the registers
+			while(!(TWCR & 0b10000000));
+			statusCode = (TWSR & 0xF8);
+			if(statusCode != 0x08 && statusCode != 0x10)
+				return statusCode;
+			TWDR = (accelAddress << 1) & 0xFE;
+			TWCR = 0b11000100;
+
+			while(!(TWCR & 0b10000000));
+			statusCode = (TWSR & 0xF8);
+			if(statusCode != 0x18)
+				return statusCode;
+		
+			TWDR = index;
+			TWCR = 0b11000100;
+			while(!(TWCR & 0b10000000));
+			statusCode = (TWSR & 0xF8);
+			if(statusCode != 0x28)
+				return statusCode;
+		
+			for(; index < NUM_ACCELEROMETER_REGISTERS; index++)
+			{
+				if(accelerometerRegister[index] < 256)
+				{
+					TWDR = accelerometerRegister[index];
+					TWCR = 0b11000100;
+					while(!(TWCR & 0b10000000));
+					statusCode = (TWSR & 0xF8);
+					if(statusCode != 0x28)
+						return statusCode;
+				}
+				else
+				{
+					index++;
+					break;
+				}
+			}
+			TWCR = 0b11010100;
+		}
+		else
+		{
+			index++;
+		}
+	}
 	
-	writeBuffer[0] = gyroSMPLRT_DIV;
-	writeBuffer[1] = gyroSampleRateDivider;
-	writeBuffer[2] = gyroDLPF;
-	writeI2C(gyroAddress, writeBuffer, 3);//Starting at gyroSMPLRT_DIV, write the values passed in to the registers in the gyroscope
+	writeI2C(accelAddress, writeBuffer, 1);//not sure if necessary
 	
-	writeBuffer[0] = 0;
-	writeI2C(gyroAddress, writeBuffer, 1);//write a zero to update the registers
+	//Gyroscope
 	
-	//more configuration if more sensors are implemented
+	index = 0;
+	
+	while(index < NUM_GYROSCOPE_REGISTERS)
+	{
+		if(gyroscopeRegister[index] < 256)
+		{
+			TWCR = 0b11100100;
+	
+			while(!(TWCR & 0b10000000));
+			statusCode = (TWSR & 0xF8);
+			if(statusCode != 0x08 && statusCode != 0x10)
+				return statusCode;
+			TWDR = (gyroAddress << 1) & 0xFE;
+			TWCR = 0b11000100;
+
+			while(!(TWCR & 0b10000000));
+			statusCode = (TWSR & 0xF8);
+			if(statusCode != 0x18)
+				return statusCode;
+		
+			TWDR = index;
+			TWCR = 0b11000100;
+			while(!(TWCR & 0b10000000));
+			statusCode = (TWSR & 0xF8);
+			if(statusCode != 0x28)
+				return statusCode;
+		
+			for(; index < NUM_GYROSCOPE_REGISTERS; index++)
+			{
+				if(gyroscopeRegister[index] < 256)
+				{
+					TWDR = gyroscopeRegister[index];
+					TWCR = 0b11000100;
+					while(!(TWCR & 0b10000000));
+					statusCode = (TWSR & 0xF8);
+					if(statusCode != 0x28)
+						return statusCode;
+				}
+				else
+				{
+					index++;
+					break;
+				}
+			}
+			TWCR = 0b11010100;
+		}
+		else
+		{
+			index++;
+		}
+	}
+	
+	writeI2C(gyroAddress, writeBuffer, 1);//not sure if necessary
+	
+	return 1;//if everything happened as expected, return 1
+}
+
+void resetSetupRegisters()
+{
+	//set all the values to 256
+	for(int i = 0; i < NUM_COMPASS_REGISTERS; i++)
+		compassRegister[i] = 256;
+	for(int i = 0; i < NUM_ACCELEROMETER_REGISTERS; i++)
+		accelerometerRegister[i] = 256;
+	for(int i = 0; i < NUM_GYROSCOPE_REGISTERS; i++)
+		gyroscopeRegister[i] = 256;
 }
 
 int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length)
@@ -437,6 +589,8 @@ int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 	statusCode = (TWSR & 0xF8);
 	if(statusCode != 0x58)//if data was received and no acknowledge sent, continue
 		return statusCode;
+	if(length == 0)
+		return -1;
 	buffer[length - 1] = TWDR;//read the last byte
 	
 	TWCR = 0b11010100;//send a stop signal
@@ -459,6 +613,7 @@ int readMagneticCompass(int axes[])
 	return 1;
 }
 
+//TODO Test this
 int readAccelerometer(int axes[])
 {
 	unsigned char writeBuffer[1] = {accelXoutL};
@@ -475,6 +630,7 @@ int readAccelerometer(int axes[])
 	return 1;
 }
 
+//TODO Test this
 int readGyroscope(int axes[])
 {
 	unsigned char writeBuffer[1] = {gyroTEMP_OUT_H};
