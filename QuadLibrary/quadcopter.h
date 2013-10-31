@@ -20,9 +20,7 @@ enum BPin {_SS = 0b00000001, _SCK = 0b00000010, _MOSI = 0b00000100, _MI = 0b0000
 enum CPin {_PIN5 = 0b01000000, _PIN13 = 0b10000000};
 enum DPin {_PIN3 = 0b00000001, _PIN2 = 0b00000010, _RX = 0b00000100, _TX = 0b00001000, _PIN4 = 0b00010000, _PIN12 = 0b01000000, _PIN6 = 0b10000000};
 enum EPin {_PIN7 = 0b01000000};
-
-//Different because it's more convenient for analog to digital conversion
-enum FPin {_A5 = 0, _A4 = 1, _A3 = 4, _A2 = 5, _A1 = 6, _A0 = 7};
+enum FPin {_A5 = 0, _A4 = 1, _A3 = 4, _A2 = 5, _A1 = 6, _A0 = 7};//Different because it's more convenient for analog to digital conversion
 
 //self explanatory; used so there's need to do error checking
 enum Voltage {_LOW, _HIGH};
