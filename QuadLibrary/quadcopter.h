@@ -30,7 +30,7 @@ enum Direction {_INPUT, _OUTPUT};
 
 //corresponds to the bits needed to change in TCCRnA.
 enum PWM_TC1 {_PIN9PWM = 0b10000000, _PIN10PWM = 0b00100000, _PIN11PWM = 0b00001000};
-enum PWM_TC3 {_PIN5PWM = 0b00000000};
+enum PWM_TC3 {_PIN5PWM = 0b10000000};
 
 //used in calculating PWM output, set in initializePWM
 unsigned int maxDuty;
