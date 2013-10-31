@@ -179,10 +179,13 @@ int readI2CAccelerometer(int axes[]);
 /*
 Reads from the gyroscope. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
 Important that the array passed has at least 3 elements or else undefined things may occur in the program.
+Compensates for temperature using experimental data.
+(real x gyro value) = (x gyro value) + 0.00266313 * temperature + 142.52507234
+(real y gyro value) = (y gyro value) - 0.00100571 * temperature - 4.60342794
+(real z gyro value) = (z gyro value) - 0.00111324 * temperature - 42.44208742
 
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
-//TODO Update the description when temperature becomes implemented
 int readI2CGyroscope(int axes[]);
 
 #include "quadcopter.cpp"

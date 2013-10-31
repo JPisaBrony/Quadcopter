@@ -331,8 +331,9 @@ int twoCharToInt(unsigned char high, unsigned char low)
 	int16_t val = high;//val is the 16 bit value used (so that the sign bit comes out right); put high in
 	val <<= 8;//shift high over to the upper 8 bits
 	val |= low;//or in low
-	int result = val;//move the result to an int (preserving the sign bit)
-	return result;//return the int
+	//int result = val;//move the result to an int (preserving the sign bit)
+	//return result;//return the int
+	return val;
 }
 
 int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
@@ -642,12 +643,11 @@ int readI2CGyroscope(int axes[])
 		
 	int temperature = twoCharToInt(readBuffer[0], readBuffer[1]);
 		
-	axes[0] = twoCharToInt(readBuffer[2], readBuffer[3]);//Store x data
-	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]);//Store y data
-	axes[2] = twoCharToInt(readBuffer[6], readBuffer[7]);//Store z data
-	
-	//TODO manipulate the data so that it factors in temperature
+	axes[0] = twoCharToInt(readBuffer[2], readBuffer[3]) + 0.00266313 * temperature + 142.52507234;//Store x data; linear regression: (real gyro value) = (gyro value) + 0.00266313 * temperature + 142.52507234
+	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]) - 0.00100571 * temperature - 4.60342794;//Store y data; linear regression: (real gyro value) = (gyro value) - 0.00100571 * temperature - 4.60342794
+	axes[2] = twoCharToInt(readBuffer[6], readBuffer[7]) - 0.00111324 * temperature - 42.44208742;//Store z data; linear regression: (real gyro value) = (gyro value) - 0.00111324 * temperature - 42.44208742
 	
 	return 1;
 }
+
 #endif
