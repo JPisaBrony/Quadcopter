@@ -3,7 +3,7 @@
 
 //I'm only going to comment on the first function of each group. The only difference is changing the affected port.
 
-void setDirection(enum BPin p, enum Direction d)
+void setDirection(BPin p, Direction d)
 {
 	//checks if the direction is input or output
 	if(d == _INPUT)
@@ -14,7 +14,7 @@ void setDirection(enum BPin p, enum Direction d)
 		DDRB |= p;
 }
 
-void setDirection(enum CPin p, enum Direction d)
+void setDirection(CPin p, Direction d)
 {
 	if(d == _INPUT)
 		DDRC &= ~p;
@@ -22,7 +22,7 @@ void setDirection(enum CPin p, enum Direction d)
 		DDRC |= p;
 }
 
-void setDirection(enum DPin p, enum Direction d)
+void setDirection(DPin p, Direction d)
 {
 	if(d == _INPUT)
 		DDRD &= ~p;
@@ -30,7 +30,7 @@ void setDirection(enum DPin p, enum Direction d)
 		DDRD |= p;
 }
 
-void setDirection(enum EPin p, enum Direction d)
+void setDirection(EPin p, Direction d)
 {
 	if(d == _INPUT)
 		DDRE &= ~p;
@@ -38,7 +38,7 @@ void setDirection(enum EPin p, enum Direction d)
 		DDRE |= p;
 }
 
-void setDirection(enum FPin p, enum Direction d)
+void setDirection(FPin p, Direction d)
 {
 	if(d == _INPUT)
 		DDRF &= ~(1 << p);//different because of analog to digital conversion
@@ -46,7 +46,7 @@ void setDirection(enum FPin p, enum Direction d)
 		DDRF |= (1 << p);//different because of analog to digital conversion
 }
 
-void digitalOutput(enum BPin p, enum Voltage v)
+void digitalOutput(BPin p, Voltage v)
 {
 	//checks if the voltage should be high or low.
 	if(v == _LOW)
@@ -57,7 +57,7 @@ void digitalOutput(enum BPin p, enum Voltage v)
 		PORTB |= p;
 }
 
-void digitalOutput(enum CPin p, enum Voltage v)
+void digitalOutput(CPin p, Voltage v)
 {
 	if(v == _LOW)
 		PORTC &= ~p;
@@ -65,7 +65,7 @@ void digitalOutput(enum CPin p, enum Voltage v)
 		PORTC |= p;
 }
 
-void digitalOutput(enum DPin p, enum Voltage v)
+void digitalOutput(DPin p, Voltage v)
 {
 	if(v == _LOW)
 		PORTD &= ~p;
@@ -73,7 +73,7 @@ void digitalOutput(enum DPin p, enum Voltage v)
 		PORTD |= p;
 }
 
-void digitalOutput(enum EPin p, enum Voltage v)
+void digitalOutput(EPin p, Voltage v)
 {
 	if(v == _LOW)
 		PORTE &= ~p;
@@ -81,7 +81,7 @@ void digitalOutput(enum EPin p, enum Voltage v)
 		PORTE |= p;
 }
 
-void digitalOutput(enum FPin p, enum Voltage v)
+void digitalOutput(FPin p, Voltage v)
 {
 	if(v == _LOW)
 		PORTF &= ~(1 << p);//different because of analog to digital conversion
@@ -89,28 +89,28 @@ void digitalOutput(enum FPin p, enum Voltage v)
 		PORTF |= (1 << p);//different because of analog to digital conversion
 }
 
-unsigned int digitalInput(enum BPin p)
+unsigned int digitalInput(BPin p)
 {
 	//anding PINB and p gives 0 if the the corresponding pin is low and the value of p if it is high. not-equalling it with zero makes it always 1 or 0. 
 	return (PINB & p) != 0;
 }
 
-unsigned int digitalInput(enum CPin p)
+unsigned int digitalInput(CPin p)
 {
 	return (PINC & p) != 0;
 }
 
-unsigned int digitalInput(enum DPin p)
+unsigned int digitalInput(DPin p)
 {
 	return (PIND & p) != 0;
 }
 
-unsigned int digitalInput(enum EPin p)
+unsigned int digitalInput(EPin p)
 {
 	return (PINE & p) != 0;
 }
 
-unsigned int digitalInput(enum FPin p)
+unsigned int digitalInput(FPin p)
 {
 	return (PINF & (1 << p)) != 0;//different because of analog to digital conversion
 }
@@ -176,7 +176,7 @@ unsigned int initializePWM(double frequency)
 	return 0;
 }
 
-void PWMOutput(enum PWM_TC1 p, double duty)
+void PWMOutput(PWM_TC1 p, double duty)
 {
 	//if duty is between 1 and 0 it is good, otherwise set it to the closest edge
 	if(duty > 1.0)
@@ -214,7 +214,7 @@ void PWMOutput(enum PWM_TC1 p, double duty)
 	TCCR1A &= ~(p >> 1);//and one bit low (0b10 means that the pin is low until the compare value is reached, then it's high)
 }
 
-void PWMOutput(enum PWM_TC3 p, double duty)
+void PWMOutput(PWM_TC3 p, double duty)
 {
 	if(duty > 1.0)
 		duty = 1.0;
@@ -236,17 +236,17 @@ void PWMOutput(enum PWM_TC3 p, double duty)
 	TCCR3A &= ~(p >> 1);
 }
 
-void stopPWM(enum PWM_TC1 p)
+void stopPWM(PWM_TC1 p)
 {
 	TCCR1A &= ~p;//disconnects the wave generator
 }
 
-void stopPWM(enum PWM_TC3 p)
+void stopPWM(PWM_TC3 p)
 {
 	TCCR3A &= ~p;
 }
 
-float analogInput(enum FPin p)
+float analogInput(FPin p)
 {
 	//Disables the digital input buffer on the corresponding pin; reduces power consumption and makes a cleaner reading
 	DIDR0 |= 1 << p;
@@ -293,7 +293,7 @@ float analogInput(enum FPin p)
 	return (result * 5) / 1023.0f;
 }
 
-float analogInput(enum FPin p, float AREFVoltage)
+float analogInput(FPin p, float AREFVoltage)
 {
 	DIDR0 |= 1 << p;
 	
@@ -544,7 +544,7 @@ int writeI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 	if(statusCode != 0x18)//if address was sent and an ACK was received continue otherwise return the statusCode
 		return statusCode;
 		
-	for(int i = 0; i < length; i++)//loop though the number of values specified by the parameter "length"
+	for(unsigned int i = 0; i < length; i++)//loop though the number of values specified by the parameter "length"
 	{
 		TWDR = buffer[i];//load the data into the Data Register
 		TWCR = 0b11000100;//give control to the hardware
@@ -575,7 +575,7 @@ int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 	if(statusCode != 0x40)//if address was sent and an ACK was received continue otherwise return the statusCode
 		return statusCode;
 		
-	for(int i = 0; i < length - 1; i++)//loop though the number of values specified by the parameter "length"
+	for(unsigned int i = 0; i < length - 1; i++)//loop though the number of values specified by the parameter "length"
 	{
 		TWCR = 0b11000100;//give control to the hardware
 		while(!(TWCR & 0b10000000));//and wait until it is done

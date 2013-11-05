@@ -30,7 +30,7 @@
 #define accelRead 0x3B
 #define accelTHRESH_TAP 0x1D
 #define accelOFSX 0x1E
-#define accelOFSX 0x1F
+#define accelOFSY 0x1F
 #define accelOFSZ 0x20
 #define accelDUR 0x21
 #define accelLatent 0x22
