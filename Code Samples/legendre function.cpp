@@ -1,20 +1,18 @@
-#include <math.h>
-#include <Arduino.h>
+//WARNING STUFF IN HERE DOESN'T WORK RIGHT!!!
 
-#define MAX_LEGENDRE_ORDER 13
-#define MAX_LEGENDRE_DEGREE 13
+#include <math.h>
+
+#define MAX_LEGENDRE_ORDER 14
+#define MAX_LEGENDRE_DEGREE 14
 #define EARTH_RADIUS 6371.2L
 #define MAJOR_AXIS  6378.137L
 #define INVERSE_FLATTENING 298.257223563L
-#define HALF_DELTA_RADIUS 0.0005
-#define HALF_DELTA_THETA 0.0005
-#define HALF_DELTA_PHI 0.0005
 
 long double legendreTheta;//stores the last theta value used in the legendreCos function
 long double legendreValue[MAX_LEGENDRE_ORDER + 1][MAX_LEGENDRE_DEGREE + 1];//stores the results of the legendreCos function to minimize repeated calculations
 char legendreBoolean[MAX_LEGENDRE_ORDER + 1][MAX_LEGENDRE_DEGREE + 1];//flags if the value is current or not, if not current it will be recalculated as needed
 
-//struct for IGRF models 
+//struct for IGRF models
 typedef struct IGRF
 {
 	unsigned char maxDegree;
@@ -25,14 +23,23 @@ typedef struct IGRF
 	double hSV[MAX_LEGENDRE_ORDER + 1][MAX_LEGENDRE_DEGREE + 1];
 } IGRF;
 
-IGRF getIGRF11Coefficents()//data from http://www.ngdc.noaa.gov/IAGA/vmod/igrf.html
+IGRF getIGRF11()//data from http://www.ngdc.noaa.gov/IAGA/vmod/igrf.html
 {
 	IGRF igrf11;
-	
+
 	igrf11.maxDegree = 13;
-	
+
 	igrf11.baseYear = 2010.0;
-	
+
+	for(int i = 0; i <= MAX_LEGENDRE_ORDER; i++)
+		for(int j = 0; j <= MAX_LEGENDRE_DEGREE; j++)
+		{
+			igrf11.gCoefficents[i][j] = 0;
+			igrf11.hCoefficents[i][j] = 0;
+			igrf11.gSV[i][j] = 0;
+			igrf11.hSV[i][j] = 0;
+		}
+
 	igrf11.gCoefficents[0][1] = -29496.5;
 	igrf11.gCoefficents[1][1] = -1585.9;
 	igrf11.hCoefficents[1][1] = 4945.1;
@@ -313,14 +320,6 @@ IGRF getIGRF11Coefficents()//data from http://www.ngdc.noaa.gov/IAGA/vmod/igrf.h
 	return igrf11;
 }
 
-long long factorial(unsigned int x)
-{
-	long long result = 1L;
-	for(unsigned int i = 2; i <= x; i++)
-		result *= i;
-	return result;
-}
-
 long double legendreCos(unsigned int degree, unsigned int order, long double theta)
 {
 	if(theta != legendreTheta)//if using a new theta value
@@ -330,31 +329,31 @@ long double legendreCos(unsigned int degree, unsigned int order, long double the
 				legendreBoolean[i][j] = 0;//reset each boolean flag
 		legendreTheta = theta;//and change the theta value
 	}
-	
+
 	if(legendreBoolean[order][degree])
 		return legendreValue[order][degree];
-	
+
 	if(degree == 0 && order == 0)//Base case P^0_0 = 1
 	{
 		legendreValue[0][0] = 1;
 		legendreBoolean[0][0] = 1;
 		return 1;
 	}
-		
+
 	if(degree == 1 && order == 0)//Base case P^0_1 = x
 	{
 		legendreValue[0][1] = cos(theta);
 		legendreBoolean[0][1] = 1;
 		return cos(theta);
 	}
-	
+
 	if(order > degree)
 	{
 		legendreValue[order][degree] = 0;
 		legendreBoolean[order][degree] = 1;
 		return 0;//if |m| > l then P^m_l = 0; here m and l are positive
 	}
-	
+
 	if(order > 0)
 	{
 		if(cos(theta) == 1 || cos(theta) == -1)//P(-1) or P(1) is non zero if m == 0; m != 0;
@@ -363,12 +362,12 @@ long double legendreCos(unsigned int degree, unsigned int order, long double the
 			legendreBoolean[order][degree] = 1;
 			return 0;
 		}
-		
+
 		legendreValue[order][degree] = ((degree - order + 1) * cos(theta) * legendreCos(degree, order - 1, theta) - (degree + order - 1) * legendreCos(degree - 1, order - 1, theta)) / sin(theta);//sqrt(1 - x^2) * P^m+1_l(x) = (l - m) * x * P^m_l(x) - (l + m) * P^m_l-1(x)
 		legendreBoolean[order][degree] = 1;
 		return legendreValue[order][degree];
 	}
-	
+
 	legendreValue[order][degree] = ((2 * degree - 1) * cos(theta) * legendreCos(degree - 1, order, theta) - (degree + order - 1) * legendreCos(degree - 2, order, theta))/(degree - order);//(l - m) P^m_l+1(x) = (2l + 1) * x * P^m_l(x) - (l + m) * P^m_l-1(x)
 	legendreBoolean[order][degree] = 1;
 	return legendreValue[order][degree];
@@ -378,21 +377,18 @@ long double schmidtLegendreCos(unsigned int degree, unsigned int order, long dou
 {
 	if(order == 0)
 		return legendreCos(degree, 0, theta);
-	return (1 - 2 * (order % 2)) * sqrt(2 * factorial(degree - order) / factorial(degree + order)) * legendreCos(degree, order, theta);
-}
 
-long double scalarPotential(IGRF model, long double radius, long double theta, long double phi, double year)
-{
-	long double sum = 0L;
-	for(unsigned char n = 1; n <= model.maxDegree; n++)
-	{
-		long double subSum = 0L;
-		for(unsigned char m = 0; m <= n; m++)
-			subSum += ((model.gCoefficents[m][n] + model.gSV[m][n] * (year - model.baseYear)) * cos(m * phi) + (model.hCoefficents[m][n] + model.hSV[m][n] * (year - model.baseYear)) * sin(m * phi)) * schmidtLegendreCos(n, m, theta);
-		subSum *= pow(EARTH_RADIUS / radius, n + 1);
-		sum += subSum;
-	}
-	return EARTH_RADIUS * sum;
+    if(order > degree)
+        return 0;
+
+    long double schmidtRatio = 0.5L;//there is a factor of two in the formula
+
+    for(unsigned int i = degree - order + 1; i <= degree + order; i++)//(degree+order)!/(degree-order)!
+    {
+        schmidtRatio *= i;
+    }
+
+	return (1 - 2 * (order % 2)) * sqrt(1.0L/schmidtRatio) * legendreCos(degree, order, theta);
 }
 
 void calculateMagneticField(IGRF model, long double altitude, long double latitude, long double longetude, double time, double results[])
@@ -401,11 +397,29 @@ void calculateMagneticField(IGRF model, long double altitude, long double latitu
 	long double theta = (90 - atan((1 - 1 / INVERSE_FLATTENING) * (1 - 1 / INVERSE_FLATTENING) * tan(latitude))) * acos(- 1.0L) / 180.0L;
 	long double phi = longetude * acos(- 1.0L) / 180.0L;
 	double year = time;
+
+	long double sumRadius = 0.0L, sumTheta = 0.0L, sumPhi = 0.0L;
+	for(unsigned char n = 1; n <= model.maxDegree; n++)
+	{
+		long double subSumRadius = 0.0L, subSumTheta = 0.0L, subSumPhi = 0.0L;
+		for(unsigned char m = 0; m <= n; m++)
+        {
+            long double g = model.gCoefficents[m][n] + model.gSV[m][n] * (year - model.baseYear);
+            long double h = model.hCoefficents[m][n] + model.hSV[m][n] * (year - model.baseYear);
+            subSumRadius += (g * cos(m * phi) + h * sin(m * phi)) * legendreCos(n, m, theta);
+		  subSumTheta += (g * cos(m * phi) + h * sin(m * phi)) * ((m-n+1) * legendreCos(n + 1, m, theta) - (n + 1) * cos(theta) * legendreCos(n + 1, m, theta)) / (cos(theta) * cos(theta) - 1);
+		  subSumPhi += m * (- g * sin(m * phi) + h * cos(m * phi)) * legendreCos(n, m, theta)
+        }
+		long double rr = pow(EARTH_RADIUS / radius, n + 2);
+		sumRadius += subSumRadius * rr * (n + 1);
+		sumTheta += subSumTheta * rr;
+		sumPhi += subSumPhi * rr
+	}
 	
-	/*long*/ double x = (scalarPotential(model, radius, theta + HALF_DELTA_THETA, phi, year) - scalarPotential(model, radius, theta - HALF_DELTA_THETA, phi, year)) / (2 * HALF_DELTA_THETA * radius);
-	/*long*/ double y = (scalarPotential(model, radius, theta, phi + HALF_DELTA_PHI, year) - scalarPotential(model, radius, theta, phi - HALF_DELTA_PHI, year)) / (2 * HALF_DELTA_PHI * radius * sin(theta));
-	/*long*/ double z = (scalarPotential(model, radius + HALF_DELTA_RADIUS, theta, phi, year) - scalarPotential(model, radius - HALF_DELTA_RADIUS, theta, phi, year)) / (2 * HALF_DELTA_RADIUS);
-	
+	long double B_r = sumRadius;
+	long double B_theta = - sumTheta;
+	long double B_phi = - sumPhi / sin(theta);
+
 	results[0] = sqrt(x * x + y * y + z * z);
 	results[1] = sqrt(x * x + y * y);
 	results[2] = atan2(z, sqrt(x * x + y * y));
