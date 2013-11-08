@@ -1,3 +1,14 @@
 itg-3200 functions
-
 http://mbed.org/users/aberk/code/ITG3200/docs/b098d99dd81e//ITG3200_8cpp_source.html#l00199
+
+GPS NMEA Packet Descriptions
+http://www.gpsinformation.org/dale/nmea.htm
+
+Mechanics of Quadcopters
+http://stemscopes.com/blog/2013/3/13/drone-science-how-quadrotors-work
+
+video on how quadcopters work
+https://www.youtube.com/watch?v=SbbBzV6pcFg
+
+Static Thrust Calculations
+http://quadcopterproject.wordpress.com/static-thrust-calculation/
