@@ -680,54 +680,51 @@ void parseGPSPacket()
 	unsigned char checksum = 0;
 	char *stringStart;
 	int i;
-	if(currentGPSPacket[0] == '$')
+	for(i = 1; currentGPSPacket[i] != '*'; i++)
 	{
-		for(i = 1; currentGPSPacket[i] != '*'; i++)
+		checksum ^= currentGPSPacket[i];//the check sum xors each byte together
+	}
+	if(checksum == strtol(&(currentGPSPacket[i+1]), NULL, 16))//if the checksum matches
+	{
+		if(strncmp(currentGPSPacket, "$GPRMC", 6) == 0)//if the packet is a RMC packet
 		{
-			checksum ^= currentGPSPacket[i];//the check sum xors each byte together
-		}
-		if(checksum == strtol(&(currentGPSPacket[i+1]), NULL, 16))//if the checksum matches
-		{
-			if(strncmp(currentGPSPacket, "$GPRMC", 6) == 0)//if the packet is a RMC packet
+			stringStart = strchr(currentGPSPacket, ',');//points to the first comma right after the message ID
+			stringStart++;//points to the first character of the UTC time
+			rawUTCTime = strtod(stringStart, &stringStart);//saves the UTC Time data; stringStart now points to the following comma; if no data available the result is 0f
+			stringStart++;//points to the status
+			if(*stringStart != ',')
 			{
-				stringStart = strchr(currentGPSPacket, ',');//points to the first comma right after the message ID
-				stringStart++;//points to the first character of the UTC time
-				rawUTCTime = strtod(stringStart, &stringStart);//saves the UTC Time data; stringStart now points to the following comma; if no data available the result is 0f
-				stringStart++;//points to the status
-				if(*stringStart != ',')
-				{
-					rawStatus = *stringStart;//saves the status
-					stringStart++;//regardless of whether there was a status or not, after the if statement it will be pointing at the following comma
-				}
-				else
-					rawStatus = 'V';//invalid data
-				stringStart++;//points to the Latitude
-				rawLatitude = strtod(stringStart, &stringStart);//saves the Latitude data; stringStart now points to the following comma; if no data available the result is 0f;
-				stringStart++;//points to the North/South indicator
-				if(*stringStart != ',')
-				{
-					rawNSIndicator = *stringStart;//saves the N/S Indicator
-					stringStart++;//regardless of whether there was a N/S Indicator or not, after the if statement it will be pointing at the following comma
-				}
-				stringStart++;//points to the longitude
-				rawLongitude = strtod(stringStart, &stringStart);//saves the Longitude data; stringStart now points to the following comma; if no data available the result is 0f;
-				stringStart++;//points to the East/West indicator
-				if(*stringStart != ',')
-				{
-					rawEWIndicator = *stringStart;//saves the E/W Indicator
-					stringStart++;//regardless of whether there was a E/W Indicator or not, after the if statement it will be pointing at the following comma
-				}
-				stringStart++;//points to the speed over ground
-				rawSpeedOverGround = strtod(stringStart, &stringStart);//saves the Speed Over Ground data; stringStart now points to the following comma; if no data available the result is 0f;
-				stringStart++;//points to the course over ground
-				rawCourseOverGround = strtod(stringStart, &stringStart);//saves the Course Over Ground data; stringStart now points to the following comma; if no data available the result is 0f;
-				stringStart++;//points to the date
-				rawDate = strtol(stringStart, &stringStart, 10);//saves the date data; stringStart now points to the following comma; if no data available the result is 0f;
+				rawStatus = *stringStart;//saves the status
+				stringStart++;//regardless of whether there was a status or not, after the if statement it will be pointing at the following comma
 			}
-			
-			//if other messages will be received, add them here in an else if statement and follow a similar procedure.
-			
+			else
+				rawStatus = 'V';//invalid data
+			stringStart++;//points to the Latitude
+			rawLatitude = strtod(stringStart, &stringStart);//saves the Latitude data; stringStart now points to the following comma; if no data available the result is 0f;
+			stringStart++;//points to the North/South indicator
+			if(*stringStart != ',')
+			{
+				rawNSIndicator = *stringStart;//saves the N/S Indicator
+				stringStart++;//regardless of whether there was a N/S Indicator or not, after the if statement it will be pointing at the following comma
+			}
+			stringStart++;//points to the longitude
+			rawLongitude = strtod(stringStart, &stringStart);//saves the Longitude data; stringStart now points to the following comma; if no data available the result is 0f;
+			stringStart++;//points to the East/West indicator
+			if(*stringStart != ',')
+			{
+				rawEWIndicator = *stringStart;//saves the E/W Indicator
+				stringStart++;//regardless of whether there was a E/W Indicator or not, after the if statement it will be pointing at the following comma
+			}
+			stringStart++;//points to the speed over ground
+			rawSpeedOverGround = strtod(stringStart, &stringStart);//saves the Speed Over Ground data; stringStart now points to the following comma; if no data available the result is 0f;
+			stringStart++;//points to the course over ground
+			rawCourseOverGround = strtod(stringStart, &stringStart);//saves the Course Over Ground data; stringStart now points to the following comma; if no data available the result is 0f;
+			stringStart++;//points to the date
+			rawDate = strtol(stringStart, &stringStart, 10);//saves the date data; stringStart now points to the following comma; if no data available the result is 0f;
 		}
+		
+		//if other messages will be received, add them here in an else if statement and follow a similar procedure.
+		
 	}
 }
 
