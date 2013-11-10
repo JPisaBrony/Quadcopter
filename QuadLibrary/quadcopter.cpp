@@ -650,4 +650,86 @@ int readI2CGyroscope(int axes[])
 	return 1;
 }
 
+void initializeGPS()
+{
+	while(!(UCSR1A & 0b00100000));//verify the transfer buffer is empty before starting
+
+	UCSR1A = 0b00000000;
+	UCSR1B = 0b00010000;//enable the receiver and disable the transmitter
+	UCSR1C = 0b00000110;//asynchronous USART, no parity, 1-bit stop, 8-bit character size
+	UBRR1H = BAUD_RATE_4800_VALUE_H;
+	UBRR1L = BAUD_RATE_4800_VALUE_L;//set to 4800 bps
+}
+
+void updateGPSData()
+{
+	while(UCSR1A & 0b10000000)//While there is data in the buffer
+	{
+		char receivedData = UDR1;//read the new data
+		if(receivedData == '$')//if it is the start of a new packet...
+			currentGPSPacketPosition = 0;//reset the position counter
+		currentGPSPacket[currentGPSPacketPosition] = receivedData;//place the new data in a char array to keep track of it
+		if(receivedData == '\n')//if it is the last char in the packet...
+			parseGPSPacket();//parse it
+		currentGPSPacketPosition++;//increment the position counter for the next call
+	}
+}
+
+void parseGPSPacket()
+{
+	unsigned char checksum = 0;
+	char *stringStart;
+	int i;
+	if(currentGPSPacket[0] == '$')
+	{
+		for(i = 1; currentGPSPacket[i] != '*'; i++)
+		{
+			checksum ^= currentGPSPacket[i];//the check sum xors each byte together
+		}
+		if(checksum == strtol(&(currentGPSPacket[i+1]), NULL, 16))//if the checksum matches
+		{
+			if(strncmp(currentGPSPacket, "$GPRMC", 6) == 0)//if the packet is a RMC packet
+			{
+				stringStart = strchr(currentGPSPacket, ',');//points to the first comma right after the message ID
+				stringStart++;//points to the first character of the UTC time
+				rawUTCTime = strtod(stringStart, &stringStart);//saves the UTC Time data; stringStart now points to the following comma; if no data available the result is 0f
+				stringStart++;//points to the status
+				if(*stringStart != ',')
+				{
+					rawStatus = *stringStart;//saves the status
+					stringStart++;//regardless of whether there was a status or not, after the if statement it will be pointing at the following comma
+				}
+				else
+					rawStatus = 'V';//invalid data
+				stringStart++;//points to the Latitude
+				rawLatitude = strtod(stringStart, &stringStart);//saves the Latitude data; stringStart now points to the following comma; if no data available the result is 0f;
+				stringStart++;//points to the North/South indicator
+				if(*stringStart != ',')
+				{
+					rawNSIndicator = *stringStart;//saves the N/S Indicator
+					stringStart++;//regardless of whether there was a N/S Indicator or not, after the if statement it will be pointing at the following comma
+				}
+				stringStart++;//points to the longitude
+				rawLongitude = strtod(stringStart, &stringStart);//saves the Longitude data; stringStart now points to the following comma; if no data available the result is 0f;
+				stringStart++;//points to the East/West indicator
+				if(*stringStart != ',')
+				{
+					rawEWIndicator = *stringStart;//saves the E/W Indicator
+					stringStart++;//regardless of whether there was a E/W Indicator or not, after the if statement it will be pointing at the following comma
+				}
+				stringStart++;//points to the speed over ground
+				rawSpeedOverGround = strtod(stringStart, &stringStart);//saves the Speed Over Ground data; stringStart now points to the following comma; if no data available the result is 0f;
+				stringStart++;//points to the course over ground
+				rawCourseOverGround = strtod(stringStart, &stringStart);//saves the Course Over Ground data; stringStart now points to the following comma; if no data available the result is 0f;
+				stringStart++;//points to the date
+				rawDate = strtol(stringStart, &stringStart, 10);//saves the date data; stringStart now points to the following comma; if no data available the result is 0f;
+			}
+			
+			//if other messages will be received, add them here in an else if statement and follow a similar procedure.
+			
+		}
+	}
+}
+
+
 #endif

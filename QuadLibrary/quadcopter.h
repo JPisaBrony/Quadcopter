@@ -3,10 +3,9 @@
 
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <stdlib.h>
+#include <string.h>
 #include "senStick.h"
-
-//Defined based on the processor's frequency
-//#define F_CPU 16000000l
 
 //The highest value initializePWM will take as a value
 #define MAX_PWM_FREQUENCY 1000000l
@@ -14,6 +13,9 @@
 #define NUM_COMPASS_REGISTERS 13
 #define NUM_ACCELEROMETER_REGISTERS 58
 #define NUM_GYROSCOPE_REGISTERS 63
+
+#define BAUD_RATE_4800_VALUE_H (F_CPU/76800 - 1) / 256  
+#define BAUD_RATE_4800_VALUE_L (F_CPU/76800 - 1) % 256
 
 //These enums' values correspond to the bit in the DDRX, PORTX, and PINX registers that is associated with that pin
 typedef enum BPin {_SS = 0b00000001, _SCK = 0b00000010, _MOSI = 0b00000100, _MI = 0b00001000, _PIN8 = 0b00010000, _PIN9 = 0b00100000, _PIN10 = 0b01000000, _PIN11 = 0b10000000} BPin;
@@ -37,6 +39,21 @@ unsigned int maxDuty;
 unsigned int compassRegister[NUM_COMPASS_REGISTERS];
 unsigned int accelerometerRegister[NUM_ACCELEROMETER_REGISTERS];
 unsigned int gyroscopeRegister[NUM_GYROSCOPE_REGISTERS];
+
+//Stores the packet of information currently being received from the serial port
+char currentGPSPacket[255];//packets are guaranteed not to exceed 255 bytes
+unsigned char currentGPSPacketPosition;
+
+//stores the last data received from the GPS; It is unprocessed
+double rawUTCTime;
+char rawStatus;
+double rawLatitude;
+char rawNSIndicator;
+double rawLongitude;
+char rawEWIndicator;
+double rawSpeedOverGround;
+double rawCourseOverGround;
+int rawDate;
 
 /*
 The setDirection methods set each pin as either input or output.
@@ -185,6 +202,23 @@ Compensates for temperature using experimental data.
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
 int readI2CGyroscope(int axes[]);
+
+/*
+Configures the registers in the USART to receive data from a GPS at 4800 bps
+*/
+void initializeGPS();
+
+/*
+Called to read data from the serial buffer and put it into the raw___ variables
+*/
+void updateGPSData();
+
+/*
+Called by updateGPSData
+No need to directly call this function
+*/
+void parseGPSPacket();
+
 
 #include "quadcopter.cpp"
 
