@@ -840,10 +840,10 @@ void parseGPSPacket()
 		utcTime = rawUTCTime;
 		latitude = (2 * (rawNSIndicator == 'N') - 1) * rawLatitude / 100.0;
 		longitude = (2 * (rawEWIndicator == 'E') - 1) * rawLongitude / 100.0;
-		speedOverGround = rawSpeedOverground;
+		speedOverGround = rawSpeedOverGround;
 		courseOverGround = rawCourseOverGround;
-		northSpeedOverGround = rawSpeedOverground * sin(rawCourseOverground * acosl(-1.0L) / 180.0L);
-		eastSpeedOverGround = rawSpeedOverground * cos(rawCourseOverground * acosl(-1.0L) / 180.0L);
+		northSpeedOverGround = rawSpeedOverGround * sin(rawCourseOverGround * acos(-1.0L) / 180.0L);
+		eastSpeedOverGround = rawSpeedOverGround * cos(rawCourseOverGround * acos(-1.0L) / 180.0L);
 		date = rawDate;
 		rawStatus = 'D';
 	}
