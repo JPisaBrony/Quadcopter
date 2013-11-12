@@ -1,0 +1,13 @@
+#include <avr/delay.h>
+
+int main() {
+ Serial.begin(9600);
+ DDRC |= (1<<6);
+ while(1) {
+   PORTC |= (1<<6);
+   _delay_ms(1000);
+   PORTC &= !(1<<6);
+   _delay_ms(1000);
+ }
+ return 0;
+}

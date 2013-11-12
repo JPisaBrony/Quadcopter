@@ -1,0 +1,12 @@
+#define led 13
+
+int main() {
+ pinMode(led, OUTPUT);
+ while(1) {
+   digitalWrite(led, HIGH);
+   delay(1000);
+   digitalWrite(led, LOW);
+   delay(1000);
+ }
+ 
+}

@@ -1,0 +1,52 @@
+#include <avr/delay.h>
+
+void setup() {
+ int data;
+ Serial.begin(9600);
+ DDRF = 0;
+ ADCSRA |= (1<<7) | (1<<2);
+ ADMUX |= (1<<6);
+ ADCSRA |= (1<<6);
+ DDRB = 255;
+ while(1) {
+   data = DATfunc(0);
+   Serial.println(data);
+   if(data < 100) {
+     PORTB &= 0;
+     PORTB |= (1<<2);
+   }
+   else if(data < 300 && data > 100) {
+     PORTB &= 0;
+     PORTB |= (1<<3);
+   }
+   else if(data < 500 && data > 300) {
+     PORTB &= 0;
+     PORTB |= (1<<4);
+   }
+   else if(data < 700 && data > 500) {
+     PORTB &= 0;
+     PORTB |= (1<<5);
+   }
+   else if(data < 900 && data > 700) {
+     PORTB &= 0;
+     PORTB |= (1<<6);
+   }
+   else if(data > 900) {
+     PORTB &= 0;
+     PORTB |= (1<<7);
+   }
+   else
+     PORTB &= 0;
+ }
+ 
+}
+
+void loop() {}
+
+unsigned int DATfunc(int channel) {
+  ADMUX &= !0b00000000;
+  ADMUX |= channel;
+  ADCSRA |= (1<<6);
+  while(ADCSRA & (1<<ADSC)) {} 
+  return ADCL + (ADCH << 8);
+}

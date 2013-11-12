@@ -1,0 +1,35 @@
+#include <avr/delay.h>
+//whore variable
+int i;
+
+void setup() {
+  Serial.begin(9600);
+  //setup dem mail bawxes
+  DDRB |= 255;
+  DDRC |= 255;
+  DDRD |= 255;
+  TCCR1A = 0b10101010;
+  TCCR3A = 0b10101010;
+  
+  TCCR1B = 0b00011010;
+  TCCR3B = 0b00011010;
+  
+  ICR1 = 40000;
+  ICR3 = 40000;
+}
+
+void loop() { DOSTUFF(); }
+
+void DOSTUFF() {
+  for(i = 1000; i < 2500; i++) {
+    OCR1A = i;
+    OCR1B = i;
+    OCR1C = i;
+
+    OCR3A = i;
+    OCR3B = i;
+    OCR3C = i;
+    Serial.println(i);
+    _delay_ms(10);
+  }
+}
