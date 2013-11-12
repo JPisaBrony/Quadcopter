@@ -355,7 +355,7 @@ void stopPWM(PWM_TC3 p)
 	TCCR3A &= ~p;
 }
 
-float analogInput(FPin p)
+double analogInput(FPin p)
 {
 	//Disables the digital input buffer on the corresponding pin; reduces power consumption and makes a cleaner reading
 	DIDR0 |= 1 << p;
@@ -399,10 +399,10 @@ float analogInput(FPin p)
 	SREG = sreg;//sets the original interrupt state
 	
 	//ADC is divided by 1023 to make the result a percentage and multiplied by +5 volts.
-	return (result * 5) / 1023.0f;
+	return (result * 5) / 1023.0;
 }
 
-float analogInput(FPin p, float AREFVoltage)
+double analogInput(FPin p, double AREFVoltage)
 {
 	DIDR0 |= 1 << p;
 	
@@ -432,7 +432,7 @@ float analogInput(FPin p, float AREFVoltage)
 	SREG = sreg;
 	
 	//ADC is divided by 1023 to make the result a percentage and multiplied by AREFVoltage.
-	return (result * AREFVoltage) / 1023.0f;
+	return (result * AREFVoltage) / 1023.0;
 }
 
 int twoCharToInt(unsigned char high, unsigned char low)

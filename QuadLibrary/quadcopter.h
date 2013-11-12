@@ -144,8 +144,8 @@ Reads the voltage on one of the analog input pins
 
 requires the pin to be set as input
 */
-float analogInput(FPin p);
-float analogInput(FPin p, float AREFVoltage);
+double analogInput(FPin p);
+double analogInput(FPin p, double AREFVoltage);
 
 /*
 Converts two chars into a signed int.
