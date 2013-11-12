@@ -5,6 +5,7 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "senStick.h"
 
 //The highest value initializePWM will take as a value
@@ -33,7 +34,8 @@ typedef enum PWM_TC1 {_PIN9PWM = 0b10000000, _PIN10PWM = 0b00100000, _PIN11PWM =
 typedef enum PWM_TC3 {_PIN5PWM = 0b10000000} PWM_TC3;
 
 //used in calculating PWM output, set in initializePWM
-unsigned int maxDuty;
+unsigned int maxDuty1;
+unsigned int maxDuty3;
 
 //used in initializePWM; Set values before calling
 unsigned int compassRegister[NUM_COMPASS_REGISTERS];
@@ -54,6 +56,15 @@ char rawEWIndicator;
 double rawSpeedOverGround;
 double rawCourseOverGround;
 int rawDate;
+
+double utcTime;
+double latitude;
+double longitude;
+double speedOverGround;
+double courseOverGround;
+double northSpeedOverGround;
+double eastSpeedOverGround;
+int date;
 
 /*
 The setDirection methods set each pin as either input or output.
@@ -94,9 +105,15 @@ unsigned int digitalInput(FPin p);
 Sets up the four 16-bit timers to output PWM
 Takes a frequency in Hz (may not be 100% accurate for some frequencies. error worsens with higher frequencies)
 
+initializePWM1 sets timer 1,
+initializePWM3 sets timer 3,
+initializePWM sets both
+
 returns 0 if it completed successfully, -1 if the frequency is out of range. (0 to MAX_PWM_FREQUENCY)
 */
-unsigned int initializePWM(double frequency);
+int initializePWM(double frequency);
+int initializePWM1(double frequency);
+int initializePWM3(double frequency);
 
 /*
 Starts sending PWM output

@@ -115,7 +115,7 @@ unsigned int digitalInput(FPin p)
 	return (PINF & (1 << p)) != 0;//different because of analog to digital conversion
 }
 
-unsigned int initializePWM(double frequency)
+int initializePWM(double frequency)
 {
 	//if the frequency is out of range, return a -1. Just an error check.
 	if(frequency > MAX_PWM_FREQUENCY || frequency <= 0)
@@ -133,7 +133,8 @@ unsigned int initializePWM(double frequency)
 		prescaler = 1024;
 	
 	//calculates the value the counter should reach before resetting (rounded to the nearest integer)
-	maxDuty = (unsigned int)(F_CPU / (frequency * prescaler) + 0.5);
+	maxDuty1 = maxDuty3 = (unsigned int)(F_CPU / (frequency * prescaler) + 0.5);
+	
 	
 	//clears any interrupts from the timers
 	TIMSK1 = 0b00000000;
@@ -168,8 +169,116 @@ unsigned int initializePWM(double frequency)
 	unsigned char sreg;
 	sreg = SREG;//saves the interrupt state
 	cli();//avr function that clears all the interrupts
-	ICR1 = maxDuty;//sets the top counter value for Timer/Counter1
-	ICR3 = maxDuty;//and Timer/Counter3 
+	ICR1 = maxDuty1;//sets the top counter value for Timer/Counter1
+	ICR3 = maxDuty3;//and Timer/Counter3 
+	SREG = sreg;//sets the original interrupt state
+	
+	//success
+	return 0;
+}
+
+int initializePWM1(double frequency)
+{
+	//if the frequency is out of range, return a -1. Just an error check.
+	if(frequency > MAX_PWM_FREQUENCY || frequency <= 0)
+		return -1;
+	
+	//Selects the smallest prescaler for the frequency. The smallest prescaler means the highest resolution
+	unsigned int prescaler;
+	if(frequency > F_CPU / 524288L)
+		prescaler = 8;
+	else if(frequency > F_CPU / 4194304L)
+		prescaler = 64;
+	else if(frequency > F_CPU / 16777216L)
+		prescaler = 256;
+	else
+		prescaler = 1024;
+	
+	//calculates the value the counter should reach before resetting (rounded to the nearest integer)
+	maxDuty1 = (unsigned int)(F_CPU / (frequency * prescaler) + 0.5);
+	
+	//clears any interrupts from the timers
+	TIMSK1 = 0b00000000;
+	
+	TCCR1A = 0b00000010;//disconnects output to all Timer/Counter1 pins (Bit 7:2), sets the waveform generation mode to mode 14 (FastPWM with ICR1 as the top value) (Bit 1:0)
+	
+	if(prescaler == 8)
+	{
+		TCCR1B = 0b00011010;//Turns off noise cancellation and input capture edge select (only applicable to input) (Bit 7:6), Bit 5 is reserved, sets the waveform generation mode to mode 14 (FastPWM with ICR1 as the top value) (Bit 4:3), and sets the appropriate prescaler.
+	}
+	else if(prescaler == 64)//the following conditions are the same as the previous condition but with a different prescalers;
+	{
+		TCCR1B = 0b00011011;
+	}
+	else if(prescaler == 256)
+	{
+		TCCR1B = 0b00011100;
+	}
+	else
+	{
+		TCCR1B = 0b00011101;
+	}
+	
+	
+	//The following chunk sets 16-bit registers
+	unsigned char sreg;
+	sreg = SREG;//saves the interrupt state
+	cli();//avr function that clears all the interrupts
+	ICR1 = maxDuty1;//sets the top counter value for Timer/Counter1
+	SREG = sreg;//sets the original interrupt state
+	
+	//success
+	return 0;
+}
+
+int initializePWM3(double frequency)
+{
+	//if the frequency is out of range, return a -1. Just an error check.
+	if(frequency > MAX_PWM_FREQUENCY || frequency <= 0)
+		return -1;
+	
+	//Selects the smallest prescaler for the frequency. The smallest prescaler means the highest resolution
+	unsigned int prescaler;
+	if(frequency > F_CPU / 524288L)
+		prescaler = 8;
+	else if(frequency > F_CPU / 4194304L)
+		prescaler = 64;
+	else if(frequency > F_CPU / 16777216L)
+		prescaler = 256;
+	else
+		prescaler = 1024;
+	
+	//calculates the value the counter should reach before resetting (rounded to the nearest integer)
+	maxDuty3 = (unsigned int)(F_CPU / (frequency * prescaler) + 0.5);
+	
+	//clears any interrupts from the timers
+	TIMSK3 = 0b00000000;
+	
+	TCCR3A = 0b00000010;//same as above but for Timer/Counter3
+	
+	if(prescaler == 8)
+	{
+		TCCR3B = 0b00011010;//same as above but for Timer/Counter3
+	}
+	else if(prescaler == 64)//the following conditions are the same as the previous condition but with a different prescalers;
+	{
+		TCCR3B = 0b00011011;
+	}
+	else if(prescaler == 256)
+	{
+		TCCR3B = 0b00011100;
+	}
+	else
+	{
+		TCCR3B = 0b00011101;
+	}
+	
+	
+	//The following chunk sets 16-bit registers
+	unsigned char sreg;
+	sreg = SREG;//saves the interrupt state
+	cli();//avr function that clears all the interrupts
+	ICR3 = maxDuty3;//and Timer/Counter3 
 	SREG = sreg;//sets the original interrupt state
 	
 	//success
@@ -185,7 +294,7 @@ void PWMOutput(PWM_TC1 p, double duty)
 		duty = 0.0;
 	
 	//find the value that represents the closest value to the desired duty cycle (rounded to the nearest integer)
-	unsigned int val = (unsigned int)(duty * maxDuty + 0.5);
+	unsigned int val = (unsigned int)(duty * maxDuty1 + 0.5);
 	
 	unsigned char sreg;
 	if(p == _PIN9PWM)
@@ -221,7 +330,7 @@ void PWMOutput(PWM_TC3 p, double duty)
 	else if(duty < 0.0)
 		duty = 0.0;
 	
-	unsigned int val = (unsigned int)(duty * maxDuty + 0.5);
+	unsigned int val = (unsigned int)(duty * maxDuty3 + 0.5);
 	
 	unsigned char sreg;
 	if(p == _PIN5PWM)
@@ -725,6 +834,18 @@ void parseGPSPacket()
 		
 		//if other messages will be received, add them here in an else if statement and follow a similar procedure.
 		
+	}
+	if(rawStatus == 'A')
+	{
+		utcTime = rawUTCTime;
+		latitude = (2 * (rawNSIndicator == 'N') - 1) * rawLatitude / 100.0;
+		longitude = (2 * (rawEWIndicator == 'E') - 1) * rawLongitude / 100.0;
+		speedOverGround = rawSpeedOverground;
+		courseOverGround = rawCourseOverGround;
+		northSpeedOverGround = rawSpeedOverground * sin(rawCourseOverground * acosl(-1.0L) / 180.0L);
+		eastSpeedOverGround = rawSpeedOverground * cos(rawCourseOverground * acosl(-1.0L) / 180.0L);
+		date = rawDate;
+		rawStatus = 'D';
 	}
 }
 
