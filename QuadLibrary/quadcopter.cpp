@@ -707,7 +707,7 @@ int readI2C(unsigned char address, unsigned char buffer[], unsigned int length)
 	return 1;//if everything happened as expected, return 1
 }
 
-int readI2CCompass(int axes[])
+int readI2CCompass(double axes[])
 {
 	unsigned char writeBuffer[1] = {magXoutH};
 	unsigned char readBuffer[6];
@@ -723,7 +723,7 @@ int readI2CCompass(int axes[])
 	return 1;
 }
 
-int readI2CAccelerometer(int axes[])
+int readI2CAccelerometer(double axes[])
 {
 	unsigned char writeBuffer[1] = {accelXoutL};
 	unsigned char readBuffer[6];
@@ -739,7 +739,7 @@ int readI2CAccelerometer(int axes[])
 	return 1;
 }
 
-int readI2CGyroscope(int axes[])
+int readI2CGyroscope(double axes[])
 {
 	unsigned char writeBuffer[1] = {gyroTEMP_OUT_H};
 	unsigned char readBuffer[8];
@@ -749,12 +749,16 @@ int readI2CGyroscope(int axes[])
 	statusCode = readI2C(gyroAddress, readBuffer, 8);//read the 8 registers starting at gyroTEMP_OUT_H
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-		
+	
 	int temperature = twoCharToInt(readBuffer[0], readBuffer[1]);
-		
-	axes[0] = twoCharToInt(readBuffer[2], readBuffer[3]) + 0.00266313 * temperature + 142.52507234;//Store x data; linear regression: (real gyro value) = (gyro value) + 0.00266313 * temperature + 142.52507234
-	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]) - 0.00100571 * temperature - 4.60342794;//Store y data; linear regression: (real gyro value) = (gyro value) - 0.00100571 * temperature - 4.60342794
-	axes[2] = twoCharToInt(readBuffer[6], readBuffer[7]) - 0.00111324 * temperature - 42.44208742;//Store z data; linear regression: (real gyro value) = (gyro value) - 0.00111324 * temperature - 42.44208742
+	
+	axes[0] = twoCharToInt(readBuffer[2], readBuffer[3]) + 154.9817501895265  +  0.004000508727186314 * temperature  -  8.23851E-8 * temperature * temperature  -  9.005870015903617E-12 * temperature * temperature * temperature  -  1.656470138597602E-16 * temperature * temperature * temperature * temperature;
+	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]) - 90.31205526954072  -  0.010700316729624036 * temperature  -  4.5907900000000004E-8 * temperature * temperature  +  2.1021177699990898E-11 * temperature * temperature * temperature  +  5.094010266748168E-16 * temperature * temperature * temperature * temperature;
+	axes[2] = twoCharToInt(readBuffer[6], readBuffer[7]) - 35.15564001714997  +  0.00041568193715910877 * temperature  +  9.29453E-8 * temperature * temperature  +  1.8663020031915918E-12 * temperature * temperature * temperature  +  1.1493123515668173E-17 * temperature * temperature * temperature * temperature;
+	
+	//*  fix this area!!!
+	axes[3] = temperature;
+	//*/
 	
 	return 1;
 }
@@ -849,5 +853,43 @@ void parseGPSPacket()
 	}
 }
 
+void initializeQuadcopter()
+{
+	resetSetupRegisters();//reset all the register values to 256
+	
+	//bits 6 and 5 represent 8 measurements per output
+	//bits 4, 3, and 2 represent an output rate of 75 Hz
+	//bits 1 and 0 represent no bias in the readings (default)
+	compassRegister[magCRA] = 0b01111000;
+	
+	//bits 7, 6, and 5 represent the gain. Set to the default of 1090 LSb/Gauss
+	compassRegister[magCRB] = 0b00100000;
+	
+	//bits 1 and 0 represent the measurement mode. Set to continuous measurement mode
+	compassRegister[magMode] = 0b00000000;
+	
+	
+	
+	//bits 3 through 0 set output rate at 100 Hz
+	accelerometerRegister[accelBW_RATE] = 0b00001010;
+	
+	//bit three sets the accelerometer into measurement mode
+	accelerometerRegister[accelPOWER_CTL] = 0b00001000;
+	
+	
+	
+	//sets the output rate to match the internal sample rate (1kHz or 8kHz)
+	gyroscopeRegister[gyroSMPLRT_DIV] = 0b00000000;
+	
+	//bits 4 and 3 allow the gyroscope to begin collecting data
+	gyroscopeRegister[gyroDLPF_FS] = 0b00011000;
+	
+	
+	
+	initializeTWI(100, 0);
+	
+	
+	//more initialization here
+}
 
 #endif

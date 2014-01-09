@@ -198,7 +198,7 @@ Important that the array passed has at least 3 elements or else undefined things
 
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
-int readI2CCompass(int axes[]);
+int readI2CCompass(double axes[]);
 
 /*
 Reads from the accelerometer. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
@@ -206,7 +206,7 @@ Important that the array passed has at least 3 elements or else undefined things
 
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
-int readI2CAccelerometer(int axes[]);
+int readI2CAccelerometer(double axes[]);
 
 /*
 Reads from the gyroscope. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
@@ -218,7 +218,7 @@ Compensates for temperature using experimental data.
 
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
-int readI2CGyroscope(int axes[]);
+int readI2CGyroscope(double axes[]);
 
 /*
 Configures the registers in the USART to receive data from a GPS at 4800 bps
