@@ -5,6 +5,9 @@ void setup()
   Serial.begin(9600);
   initializePWM(50);
   
+  setDirection(_PIN5, _OUTPUT);
+  setDirection(_PIN9, _OUTPUT);
+  setDirection(_PIN10, _OUTPUT);
   setDirection(_PIN11, _OUTPUT);
   setDirection(_A5, _INPUT);
   
@@ -14,11 +17,16 @@ void setup()
   {
     volts = analogInput(_A5);
     
-    duty = 0.0034 * volts + 0.070;
+    duty = volts / 25.0;
     
+    PWMOutput(_PIN5PWM, duty);
+    PWMOutput(_PIN9PWM, duty);
+    PWMOutput(_PIN10PWM, duty);
     PWMOutput(_PIN11PWM, duty);
     
     Serial.println(duty, 10);
+    
+    _delay_ms(200);
   }
 }
 

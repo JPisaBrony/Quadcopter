@@ -1,4 +1,4 @@
-#include "/home/josh/Quadcopter/QuadLibrary/quadcopter.h"
+#include "C:\Users\Owner\Quadcopter\QuadLibrary\quadcopter.h"
 
 #define ANGLE_ADJUSTMENT_CONSTANT 0.0591549430919
 #define MIDDLE_POWER_VALUE 0.6
@@ -37,10 +37,8 @@ void setup()
       _delay_ms(5000);
       while(digitalInput(_PIN7))
       {
-        //readI2CAccelerometer(accel);
-        accel[0] = 0;
-        accel[1] = 0;
-        accel[2] = 255;
+        /*readI2CAccelerometer(accel);
+        
         xAngle = atan2(accel[0], accel[2]);
         duty[xp] = ANGLE_ADJUSTMENT_CONSTANT * xAngle + MIDDLE_POWER_VALUE;
         duty[xn] = - ANGLE_ADJUSTMENT_CONSTANT * xAngle + MIDDLE_POWER_VALUE;
@@ -48,12 +46,12 @@ void setup()
         yAngle = atan2(accel[1], accel[2]);
         duty[yp] = ANGLE_ADJUSTMENT_CONSTANT * yAngle + MIDDLE_POWER_VALUE;
         duty[yn] = - ANGLE_ADJUSTMENT_CONSTANT * yAngle + MIDDLE_POWER_VALUE;
+        */
         
-        Serial.println(accel[0], 5);
-        Serial.println(accel[1], 5);
-        Serial.println(accel[2], 5);
-        Serial.println(xAngle, 5);
-        Serial.println(duty[xp], 5);
+        duty[xp] = 0.5;
+        duty[xn] = 0.5;
+        duty[yp] = 0.5;
+        duty[yn] = 0.5;
         
         for(int i = 0; i < 4; i++)
           duty[i] = duty[i] * (upperLimit[i] - lowerLimit[i]) + lowerLimit[i];
@@ -63,10 +61,30 @@ void setup()
         PWMOutput(_PIN10PWM, duty[yp]);
         PWMOutput(_PIN11PWM, duty[yn]);
         
-        
-        Serial.println(duty[xp], 5);
-        Serial.println();
-       
+        if(Serial.available() && Serial.read())
+        {
+          Serial.print("xp duty: ");
+          Serial.println(duty[xp], 5);
+          Serial.print("OCR3A: ");
+          Serial.println(OCR3A);
+          Serial.println();
+          Serial.print("xn duty: ");
+          Serial.println(duty[xn], 5);
+          Serial.print("OCR1A: ");
+          Serial.println(OCR1A);
+          Serial.println();
+          Serial.print("yp duty: ");
+          Serial.println(duty[yp], 5);
+          Serial.print("OCR1B: ");
+          Serial.println(OCR1B);
+          Serial.println();
+          Serial.print("yn duty: ");
+          Serial.println(duty[yn], 5);
+          Serial.print("OCR1C: ");
+          Serial.println(OCR1C);
+          Serial.println();
+          Serial.println();
+        }
       }
     }
     PWMOutput(_PIN5PWM, 0.036);
