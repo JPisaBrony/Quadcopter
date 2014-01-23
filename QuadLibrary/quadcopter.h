@@ -236,6 +236,20 @@ No need to directly call this function
 */
 void parseGPSPacket();
 
+/*
+initializes everything that the quadcopter needs to start flying
+*/
+void initializeQuadcopter();
+
+/*
+sets the duty cycle on all four motors at once
+*/
+void setMotorPWMDuty(double xp, double xn, double yp, double yn);
+
+/*
+sends a signal that is below the threshold for the motors so they don't move but they're still receiving signal
+*/
+void stopMotors()
 
 #include "quadcopter.cpp"
 

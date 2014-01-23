@@ -885,11 +885,51 @@ void initializeQuadcopter()
 	gyroscopeRegister[gyroDLPF_FS] = 0b00011000;
 	
 	
-	
 	initializeTWI(100, 0);
 	
+	setDirection(_PIN5, _OUTPUT);
+	setDirection(_PIN9, _OUTPUT);
+	setDirection(_PIN10, _OUTPUT);
+	setDirection(_PIN11, _OUTPUT);
 	
-	//more initialization here
+	initializePWM(50);
+	
+	//Moar Initialization!
 }
+
+void setMotorPWMDuty(double xp, double xn, double yp, double yn)
+{
+	if(xp < 0)
+		xp = 0;
+	else if(xp > 1)
+		xp = 1;
+	
+	if(xn < 0)
+		xn = 0;
+	else if(xn > 1)
+		xn = 1;
+	
+	if(yp < 0)
+		yp = 0;
+	else if(yp > 1)
+		yp = 1;
+
+	if(yn < 0)
+		yn = 0;
+	else if(yn > 1)
+		yn = 1;
+		
+	PWMOutput(_PIN5PWM, xp);
+	PWMOutput(_PIN9PWM, xn);
+	PWMOutput(_PIN10PWM, yp);
+	PWMOutput(_PIN11PWM, yn);
+}
+
+void stopMotors()
+{
+	setMotorPWMDuty(0.036, 0.036, 0.036, 0.036);
+}
+
+
 
 #endif
