@@ -22,13 +22,7 @@ void setup()
  
   Serial.begin(9600);
  
-  setDirection(_PIN5, _OUTPUT);
-  setDirection(_PIN9, _OUTPUT);
-  setDirection(_PIN10, _OUTPUT);
-  setDirection(_PIN11, _OUTPUT);
   setDirection(_PIN7, _INPUT);
- 
-  initializePWM(50);
  
   while(1)
   {
@@ -56,10 +50,7 @@ void setup()
         for(int i = 0; i < 4; i++)
           duty[i] = duty[i] * (upperLimit[i] - lowerLimit[i]) + lowerLimit[i];
          
-        PWMOutput(_PIN5PWM, duty[xp]);
-        PWMOutput(_PIN9PWM, duty[xn]);
-        PWMOutput(_PIN10PWM, duty[yp]);
-        PWMOutput(_PIN11PWM, duty[yn]);
+        setMotorPWMDuty(duty[xp], duty[xn], duty[yp], duty[yn]);
         
         if(Serial.available() && Serial.read())
         {
@@ -87,10 +78,7 @@ void setup()
         }
       }
     }
-    PWMOutput(_PIN5PWM, 0.036);
-    PWMOutput(_PIN9PWM, 0.036);
-    PWMOutput(_PIN10PWM, 0.036);
-    PWMOutput(_PIN11PWM, 0.036);
+    stopMotors();
     Serial.println("Flip the switch to start.");
   }
 }

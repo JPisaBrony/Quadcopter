@@ -249,7 +249,7 @@ void setMotorPWMDuty(double xp, double xn, double yp, double yn);
 /*
 sends a signal that is below the threshold for the motors so they don't move but they're still receiving signal
 */
-void stopMotors()
+void stopMotors();
 
 #include "quadcopter.cpp"
 
