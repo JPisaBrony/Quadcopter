@@ -1,4 +1,4 @@
-#include "C:\Users\Owner\Quadcopter\QuadLibrary\quadcopter.h"
+#include "\Quadcopter\QuadLibrary\quadcopter.h"
 
 #define ANGLE_ADJUSTMENT_CONSTANT 0.0591549430919
 #define MIDDLE_POWER_VALUE 0.6
