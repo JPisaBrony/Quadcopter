@@ -15,6 +15,9 @@
 #define NUM_ACCELEROMETER_REGISTERS 58
 #define NUM_GYROSCOPE_REGISTERS 63
 
+#define UPPER_LIMIT 0.075
+#define LOWER_LIMIT 0.035
+
 #define BAUD_RATE_4800_VALUE_H (F_CPU/76800 - 1) / 256  
 #define BAUD_RATE_4800_VALUE_L (F_CPU/76800 - 1) % 256
 
@@ -244,7 +247,7 @@ void initializeQuadcopter();
 /*
 sets the duty cycle on all four motors at once
 */
-void setMotorPWMDuty(double xp, double xn, double yp, double yn);
+void setMotor(double xp, double xn, double yp, double yn);
 
 /*
 sends a signal that is below the threshold for the motors so they don't move but they're still receiving signal

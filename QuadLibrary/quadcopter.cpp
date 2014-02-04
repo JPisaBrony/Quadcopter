@@ -894,30 +894,42 @@ void initializeQuadcopter()
 	
 	initializePWM(50);
 	
+	stopMotors();
+	
 	//Moar Initialization!
 }
 
-void setMotorPWMDuty(double xp, double xn, double yp, double yn)
+void setMotor(double xp, double xn, double yp, double yn)
 {
-	if(xp < 0)
-		xp = 0;
-	else if(xp > 1)
-		xp = 1;
+	xp *= UPPER_LIMIT - LOWER_LIMIT;
+	xn *= UPPER_LIMIT - LOWER_LIMIT;
+	yp *= UPPER_LIMIT - LOWER_LIMIT;
+	yn *= UPPER_LIMIT - LOWER_LIMIT;
 	
-	if(xn < 0)
-		xn = 0;
-	else if(xn > 1)
-		xn = 1;
-	
-	if(yp < 0)
-		yp = 0;
-	else if(yp > 1)
-		yp = 1;
+	xp += LOWER_LIMIT;
+	xn += LOWER_LIMIT;
+	yp += LOWER_LIMIT;
+	yn += LOWER_LIMIT;
 
-	if(yn < 0)
-		yn = 0;
-	else if(yn > 1)
-		yn = 1;
+	if(xp < LOWER_LIMIT)
+		xp = LOWER_LIMIT;
+	else if(xp > UPPER_LIMIT)
+		xp = UPPER_LIMIT;
+	
+	if(xn < LOWER_LIMIT)
+		xn = LOWER_LIMIT;
+	else if(xn > UPPER_LIMIT)
+		xn = UPPER_LIMIT;
+	
+	if(yp < LOWER_LIMIT)
+		yp = LOWER_LIMIT;
+	else if(yp > UPPER_LIMIT)
+		yp = UPPER_LIMIT;
+
+	if(yn < LOWER_LIMIT)
+		yn = LOWER_LIMIT;
+	else if(yn > UPPER_LIMIT)
+		yn = UPPER_LIMIT;
 		
 	PWMOutput(_PIN5PWM, xp);
 	PWMOutput(_PIN9PWM, xn);
@@ -927,7 +939,7 @@ void setMotorPWMDuty(double xp, double xn, double yp, double yn)
 
 void stopMotors()
 {
-	setMotorPWMDuty(0.036, 0.036, 0.036, 0.036);
+	setMotor(0, 0, 0, 0);
 }
 
 
