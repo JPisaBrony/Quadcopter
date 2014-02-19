@@ -3,34 +3,55 @@
 #define PROPORTIONAL_GAIN 1.0
 #define INTEGRAL_GAIN 1.0
 #define DERIVATIVE_GAIN 1.0
-#define ERROR_SAMPLES 5000
 
 double accel[3];
-double error[ERROR_SAMPLES];
-int count;
+double xAngleSP, yAngleSP, xAnglePV, yAnglePV, lastXAngleError, lastYAngleError, integralXAngleError, integralYAngleError, xCorrection, yCorrection;
+unsigned long time;
 
-ISR(TIMER0_COMPA_vect)
+void updateCorrection(double accelerometerData[])
 {
-  count = (count + 1) % ERROR_SAMPLES;
+  unsigned long timeDifference = time;
+  time = 0;
+  xAnglePV = atan2(accelerometerData[0], accelerometerData[2]);
+  yAnglePV = atan2(accelerometerData[1], accelerometerData[2]);
+  double xAngleError = xAnglePV - xAngleSP;
+  double yAngleError = yAnglePV - yAngleSP;
+  double xP = - PROPORTIONAL_GAIN * (xAngleError);
+  double yP = - PROPORTIONAL_GAIN * (yAngleError);
+  double xD = - DERIVATIVE_GAIN * (xAngleError - lastXAngleError)/timeDifference;
+  double yD = - DERIVATIVE_GAIN * (yAngleError - lastYAngleError)/timeDifference;
+  integralXAngleError += (lastXAngleError + xAngleError) * (timeDifference / 2.0);
+  integralYAngleError += (lastYAngleError + yAngleError) * (timeDifference / 2.0);
+  double xI = - INTEGRAL_GAIN * integralXAngleError;
+  double yI = - INTEGRAL_GAIN * integralYAngleError;
+  lastXAngleError = xAngleError;
+  lastYAngleError = yAngleError;
+  xCorrection = xP + xI + xD;
+  yCorrection = yP + yI + yD;
+}
+
+void updateSetPointAndCorrection(double xAngle, double yAngle, double accelerometerData[])
+{
+  time = 0;
+  xAngleSP = xAngle;
+  yAngleSP = yAngle;
+  integralXAngleError = 0;
+  integralYAngleError = 0;
+  xAnglePV = atan2(accelerometerData[0], accelerometerData[2]);
+  yAnglePV = atan2(accelerometerData[1], accelerometerData[2]);
+  double xAngleError = xAnglePV - xAngleSP;
+  double yAngleError = yAnglePV - yAngleSP;
+  lastXAngleError = xAngleError;
+  lastYAngleError = yAngleError;
+  xCorrection = - PROPORTIONAL_GAIN * (xAngleError);
+  yCorrection = - PROPORTIONAL_GAIN * (yAngleError);
 }
 
 void setup()
 {
   Serial.begin(9600);
   initializeQuadcopter();
-  
-  TCCR0A = 0b00000010;
-  TCCR0B = 0b00000011;
-  OCR0A = 249;
-  TIMSK0 = 0b00000010;
-  count = 0;
-  
-  int prevCount = 0;
-  
-  while(1)
-  {
-    prevCount++;
-  }
+  PORTB = 0;
 }
 
 void loop(){}
