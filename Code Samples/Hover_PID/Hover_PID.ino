@@ -1,8 +1,8 @@
 #include "C:\Users\Owner\Quadcopter\QuadLibrary\quadcopter.h"
 
-#define X_PROPORTIONAL_GAIN 0.01
-#define X_INTEGRAL_GAIN 0.005
-#define X_DERIVATIVE_GAIN 0.0075
+double X_PROPORTIONAL_GAIN;//0.5151515007
+double X_INTEGRAL_GAIN;//0.0000537634
+double X_DERIVATIVE_GAIN;
 #define Y_PROPORTIONAL_GAIN X_PROPORTIONAL_GAIN
 #define Y_INTEGRAL_GAIN X_INTEGRAL_GAIN
 #define Y_DERIVATIVE_GAIN X_DERIVATIVE_GAIN
@@ -21,8 +21,10 @@ void updateCorrection(double accelerometerData[])
   double yAngleError = yAnglePV - yAngleSP;
   double xP = - X_PROPORTIONAL_GAIN * (xAngleError);
   double yP = - Y_PROPORTIONAL_GAIN * (yAngleError);
-  double xD = - X_DERIVATIVE_GAIN * (xAngleError - lastXAngleError)/timeDifference;
-  double yD = - Y_DERIVATIVE_GAIN * (yAngleError - lastYAngleError)/timeDifference;
+  double xDerivative = (xAngleError - lastXAngleError)/timeDifference;
+  double yDerivative = (yAngleError - lastYAngleError)/timeDifference;
+  double xD = - X_DERIVATIVE_GAIN * xDerivative;
+  double yD = - Y_DERIVATIVE_GAIN * yDerivative;
   integralXAngleError += (lastXAngleError + xAngleError) * (timeDifference / 2.0);
   integralYAngleError += (lastYAngleError + yAngleError) * (timeDifference / 2.0);
   double xI = - X_INTEGRAL_GAIN * integralXAngleError;
@@ -31,6 +33,26 @@ void updateCorrection(double accelerometerData[])
   lastYAngleError = yAngleError;
   xCorrection = xP + xI + xD;
   yCorrection = yP + yI + yD;
+  Serial.print(Y_PROPORTIONAL_GAIN, 10);  
+  Serial.print(",");
+  Serial.print(Y_INTEGRAL_GAIN, 10);  
+  Serial.print(",");
+  Serial.print(Y_DERIVATIVE_GAIN, 10);  
+  Serial.print(",");
+  Serial.print(yAngleError);
+  Serial.print(",");
+  Serial.print(yDerivative);
+  Serial.print(",");
+  Serial.print(integralYAngleError);
+  Serial.print(",");
+  Serial.print(yP);
+  Serial.print(",");
+  Serial.print(yI);
+  Serial.print(",");
+  Serial.print(yD);
+  Serial.print(",");
+  Serial.print(yCorrection);
+  Serial.println();
 }
 
 void updateSetPointAndCorrection(double xAngle, double yAngle, double accelerometerData[])
@@ -56,9 +78,9 @@ void setup()
   initializeQuadcopter();
   
   setDirection(_PIN7, _INPUT);
-  
-  readI2CAccelerometer(accel);
-  updateSetPointAndCorrection(0, 0, accel);
+  setDirection(_A0, _INPUT);
+  setDirection(_A1, _INPUT);
+  setDirection(_A2, _INPUT);
   
   while(1)
   {
@@ -68,16 +90,21 @@ void setup()
       
       while(digitalInput(_PIN7))
       {
+        X_PROPORTIONAL_GAIN = analogInput(_A0) / 5.0; //0.53 was good
+        X_INTEGRAL_GAIN = analogInput(_A1) / 50000.0;
+        X_DERIVATIVE_GAIN = 0;//analogInput(_A2) / 5.0;
+        
+        
         readI2CAccelerometer(accel);
         
         time++;
         updateCorrection(accel);
         
-        setMotors(0, 0, 0.5 - yCorrection, 0.5 + yCorrection);
-        
-        //_delay_ms(0);
+        setMotors(0, 0, 0.75 - yCorrection, 0.75 + yCorrection);
       }
     }
+    readI2CAccelerometer(accel);
+    updateSetPointAndCorrection(0, 0, accel);
     stopMotors();
     //Serial.println("Flip the switch to start.");
   }
