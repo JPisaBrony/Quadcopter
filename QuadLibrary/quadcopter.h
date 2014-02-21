@@ -247,7 +247,7 @@ void initializeQuadcopter();
 /*
 sets the duty cycle on all four motors at once
 */
-void setMotor(double xp, double xn, double yp, double yn);
+void setMotors(double xp, double xn, double yp, double yn);
 
 /*
 sends a signal that is below the threshold for the motors so they don't move but they're still receiving signal

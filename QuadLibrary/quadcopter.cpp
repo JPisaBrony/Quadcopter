@@ -899,7 +899,7 @@ void initializeQuadcopter()
 	//Moar Initialization!
 }
 
-void setMotor(double xp, double xn, double yp, double yn)
+void setMotors(double xp, double xn, double yp, double yn)
 {
 	xp *= UPPER_LIMIT - LOWER_LIMIT;
 	xn *= UPPER_LIMIT - LOWER_LIMIT;
@@ -939,7 +939,7 @@ void setMotor(double xp, double xn, double yp, double yn)
 
 void stopMotors()
 {
-	setMotor(0, 0, 0, 0);
+	setMotors(0, 0, 0, 0);
 }
 
 
