@@ -90,9 +90,10 @@ void setup()
       
       while(digitalInput(_PIN7))
       {
-        X_PROPORTIONAL_GAIN = analogInput(_A0) / 5.0; //0.53 was good
-        X_INTEGRAL_GAIN = analogInput(_A1) / 50000.0;
-        X_DERIVATIVE_GAIN = 0;//analogInput(_A2) / 5.0;
+        //Potentiometers to addjust constants; Not for final quadcopter.
+        X_PROPORTIONAL_GAIN = ((analogInput(_A0)/ 2.5) - 1) / 10.0 + 0.5151515007;
+        X_INTEGRAL_GAIN = ((analogInput(_A1) / 2.5) - 1) / 100000.0 + 0.0000537634;
+        X_DERIVATIVE_GAIN = 0;//((analogInput(_A2) - 2.5) / 2.5);
         
         
         readI2CAccelerometer(accel);
