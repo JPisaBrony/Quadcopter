@@ -9,24 +9,23 @@ double X_DERIVATIVE_GAIN;
 
 double accel[3];
 double xAngleSP, yAngleSP, xAnglePV, yAnglePV, lastXAngleError, lastYAngleError, integralXAngleError, integralYAngleError, xCorrection, yCorrection;
-unsigned long time;
 
 void updateCorrection(double accelerometerData[])
 {
-  unsigned long timeDifference = time;
-  time = 0;
+  unsigned long time = timeDifferential;
+  timeDifferential = 0;
   xAnglePV = atan2(accelerometerData[0], accelerometerData[2]);
   yAnglePV = atan2(accelerometerData[1], accelerometerData[2]);
   double xAngleError = xAnglePV - xAngleSP;
   double yAngleError = yAnglePV - yAngleSP;
   double xP = - X_PROPORTIONAL_GAIN * (xAngleError);
   double yP = - Y_PROPORTIONAL_GAIN * (yAngleError);
-  double xDerivative = (xAngleError - lastXAngleError)/timeDifference;
-  double yDerivative = (yAngleError - lastYAngleError)/timeDifference;
+  double xDerivative = (xAngleError - lastXAngleError)/time;
+  double yDerivative = (yAngleError - lastYAngleError)/time;
   double xD = - X_DERIVATIVE_GAIN * xDerivative;
   double yD = - Y_DERIVATIVE_GAIN * yDerivative;
-  integralXAngleError += (lastXAngleError + xAngleError) * (timeDifference / 2.0);
-  integralYAngleError += (lastYAngleError + yAngleError) * (timeDifference / 2.0);
+  integralXAngleError += (lastXAngleError + xAngleError) * (time / 2.0);
+  integralYAngleError += (lastYAngleError + yAngleError) * (time / 2.0);
   double xI = - X_INTEGRAL_GAIN * integralXAngleError;
   double yI = - Y_INTEGRAL_GAIN * integralYAngleError;
   lastXAngleError = xAngleError;
@@ -57,11 +56,9 @@ void updateCorrection(double accelerometerData[])
 
 void updateSetPointAndCorrection(double xAngle, double yAngle, double accelerometerData[])
 {
-  time = 0;
+  timeDifferential = 0;
   xAngleSP = xAngle;
   yAngleSP = yAngle;
-  integralXAngleError = 0;
-  integralYAngleError = 0;
   xAnglePV = atan2(accelerometerData[0], accelerometerData[2]);
   yAnglePV = atan2(accelerometerData[1], accelerometerData[2]);
   double xAngleError = xAnglePV - xAngleSP;
