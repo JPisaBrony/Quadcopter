@@ -40,10 +40,13 @@ typedef enum PWM_TC3 {_PIN5PWM = 0b10000000} PWM_TC3;
 unsigned int maxDuty1;
 unsigned int maxDuty3;
 
-//used in initializePWM; Set values before calling
+//used in initializeTWI; Set values before calling
 unsigned int compassRegister[NUM_COMPASS_REGISTERS];
 unsigned int accelerometerRegister[NUM_ACCELEROMETER_REGISTERS];
 unsigned int gyroscopeRegister[NUM_GYROSCOPE_REGISTERS];
+
+//used in the timer zero interupt. counts the number of units time since it was last reset.
+unsigned long timeDiferential;
 
 //Stores the packet of information currently being received from the serial port
 char currentGPSPacket[255];//packets are guaranteed not to exceed 255 bytes

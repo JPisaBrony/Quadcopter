@@ -885,16 +885,23 @@ void initializeQuadcopter()
 	gyroscopeRegister[gyroDLPF_FS] = 0b00011000;
 	
 	
-	initializeTWI(100, 0);
+	initializeTWI(100, 0);//initialize two wire interface with a bit rate of 100 and bit rate prescaler of 0
 	
+	//these pins are for PWM output to the motor controllers
 	setDirection(_PIN5, _OUTPUT);
 	setDirection(_PIN9, _OUTPUT);
 	setDirection(_PIN10, _OUTPUT);
 	setDirection(_PIN11, _OUTPUT);
 	
-	initializePWM(50);
+	initializePWM(50);//start the timers for PWM at 50 Hz
 	
-	stopMotors();
+	stopMotors();//start sending output to the motors (but below the threshold of movement)
+	
+	//initialize the timer interrupt
+	TCCR0A = 0b00000010;//No output, CTC
+	TCCR0B = 0b00000010;//CTC, Prescaler of 8
+	OCR0A = 99;//reset every 10,000th of a second
+	TIMSK0 = 0b00000010;//enable interrupts every 10,000th of a second
 	
 	//Moar Initialization!
 }
@@ -942,6 +949,9 @@ void stopMotors()
 	setMotors(0, 0, 0, 0);
 }
 
-
+ISR(TIMER0_COMPA_vect)
+{
+	timeDiferential++;
+}
 
 #endif
