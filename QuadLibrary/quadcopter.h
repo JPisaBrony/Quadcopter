@@ -46,7 +46,7 @@ unsigned int accelerometerRegister[NUM_ACCELEROMETER_REGISTERS];
 unsigned int gyroscopeRegister[NUM_GYROSCOPE_REGISTERS];
 
 //used in the timer zero interupt. counts the number of units time since it was last reset.
-unsigned long timeDiferential;
+unsigned long timeDifferential;
 
 //Stores the packet of information currently being received from the serial port
 char currentGPSPacket[255];//packets are guaranteed not to exceed 255 bytes

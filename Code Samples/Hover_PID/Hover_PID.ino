@@ -1,7 +1,7 @@
 #include "C:\Users\Owner\Quadcopter\QuadLibrary\quadcopter.h"
 
-double X_PROPORTIONAL_GAIN;//0.5151515007
-double X_INTEGRAL_GAIN;//0.0000537634
+double X_PROPORTIONAL_GAIN;
+double X_INTEGRAL_GAIN;
 double X_DERIVATIVE_GAIN;
 #define Y_PROPORTIONAL_GAIN X_PROPORTIONAL_GAIN
 #define Y_INTEGRAL_GAIN X_INTEGRAL_GAIN
@@ -95,7 +95,6 @@ void setup()
         
         readI2CAccelerometer(accel);
         
-        time++;
         updateCorrection(accel);
         
         setMotors(0, 0, 0.75 - yCorrection, 0.75 + yCorrection);

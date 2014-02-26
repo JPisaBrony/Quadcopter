@@ -908,16 +908,20 @@ void initializeQuadcopter()
 
 void setMotors(double xp, double xn, double yp, double yn)
 {
+	//scale the values to the correct range
 	xp *= UPPER_LIMIT - LOWER_LIMIT;
 	xn *= UPPER_LIMIT - LOWER_LIMIT;
 	yp *= UPPER_LIMIT - LOWER_LIMIT;
 	yn *= UPPER_LIMIT - LOWER_LIMIT;
 	
+	//shift it up so that 0.0 corresponds to the lower threshold of the motor
 	xp += LOWER_LIMIT;
 	xn += LOWER_LIMIT;
 	yp += LOWER_LIMIT;
 	yn += LOWER_LIMIT;
 
+	//ensure that the values are within the range
+	
 	if(xp < LOWER_LIMIT)
 		xp = LOWER_LIMIT;
 	else if(xp > UPPER_LIMIT)
@@ -938,6 +942,8 @@ void setMotors(double xp, double xn, double yp, double yn)
 	else if(yn > UPPER_LIMIT)
 		yn = UPPER_LIMIT;
 		
+	//output the signal
+		
 	PWMOutput(_PIN5PWM, xp);
 	PWMOutput(_PIN9PWM, xn);
 	PWMOutput(_PIN10PWM, yp);
@@ -951,7 +957,7 @@ void stopMotors()
 
 ISR(TIMER0_COMPA_vect)
 {
-	timeDiferential++;
+	timeDifferential++;
 }
 
 #endif
