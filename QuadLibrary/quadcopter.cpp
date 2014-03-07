@@ -899,9 +899,9 @@ void initializeQuadcopter()
 	
 	//initialize the timer interrupt
 	TCCR0A = 0b00000010;//No output, CTC
-	TCCR0B = 0b00000010;//CTC, Prescaler of 8
-	OCR0A = 99;//reset every 10,000th of a second
-	TIMSK0 = 0b00000010;//enable interrupts every 10,000th of a second
+	TCCR0B = 0b00000011;//CTC, Prescaler of 64
+	OCR0A = 124;//reset every 1000th of a second
+	TIMSK0 = 0b00000010;//enable interrupts every 1000th of a second
 	
 	//Moar Initialization!
 }

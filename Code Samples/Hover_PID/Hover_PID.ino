@@ -13,45 +13,44 @@ double xAngleSP, yAngleSP, xAnglePV, yAnglePV, lastXAngleError, lastYAngleError,
 void updateCorrection(double accelerometerData[])
 {
   unsigned long time = timeDifferential;
+//  Serial.print("Time: ");
+//  Serial.println(timeDifferential);
   timeDifferential = 0;
   xAnglePV = atan2(accelerometerData[0], accelerometerData[2]);
   yAnglePV = atan2(accelerometerData[1], accelerometerData[2]);
+//  Serial.print("Angle: ");
+//  Serial.println(yAnglePV);
   double xAngleError = xAnglePV - xAngleSP;
   double yAngleError = yAnglePV - yAngleSP;
+//  Serial.print("Angle Error: ");
+//  Serial.println(yAngleError);
   double xP = - X_PROPORTIONAL_GAIN * (xAngleError);
   double yP = - Y_PROPORTIONAL_GAIN * (yAngleError);
+//  Serial.print("P: ");
+//  Serial.println(yP);
   double xDerivative = (xAngleError - lastXAngleError)/time;
   double yDerivative = (yAngleError - lastYAngleError)/time;
+//  Serial.print("Derivative: ");
+//  Serial.println(yDerivative);
   double xD = - X_DERIVATIVE_GAIN * xDerivative;
   double yD = - Y_DERIVATIVE_GAIN * yDerivative;
+//  Serial.print("D: ");
+//  Serial.println(yD);
   integralXAngleError += (lastXAngleError + xAngleError) * (time / 2.0);
   integralYAngleError += (lastYAngleError + yAngleError) * (time / 2.0);
+//  Serial.print("Integral: ");
+//  Serial.println(integralYAngleError);
   double xI = - X_INTEGRAL_GAIN * integralXAngleError;
   double yI = - Y_INTEGRAL_GAIN * integralYAngleError;
+//  Serial.print("I: ");
+//  Serial.println(yI);
   lastXAngleError = xAngleError;
   lastYAngleError = yAngleError;
   xCorrection = xP + xI + xD;
   yCorrection = yP + yI + yD;
-  Serial.print(Y_PROPORTIONAL_GAIN, 10);  
-  Serial.print(",");
-  Serial.print(Y_INTEGRAL_GAIN, 10);  
-  Serial.print(",");
-  Serial.print(Y_DERIVATIVE_GAIN, 10);  
-  Serial.print(",");
-  Serial.print(yAngleError);
-  Serial.print(",");
-  Serial.print(yDerivative);
-  Serial.print(",");
-  Serial.print(integralYAngleError);
-  Serial.print(",");
-  Serial.print(yP);
-  Serial.print(",");
-  Serial.print(yI);
-  Serial.print(",");
-  Serial.print(yD);
-  Serial.print(",");
-  Serial.print(yCorrection);
-  Serial.println();
+//  Serial.print("Correction: ");
+//  Serial.println(yCorrection);
+//  Serial.println();
 }
 
 void updateSetPointAndCorrection(double xAngle, double yAngle, double accelerometerData[])
@@ -66,7 +65,7 @@ void updateSetPointAndCorrection(double xAngle, double yAngle, double accelerome
   lastXAngleError = xAngleError;
   lastYAngleError = yAngleError;
   xCorrection = - X_PROPORTIONAL_GAIN * (xAngleError);
-  yCorrection = - X_PROPORTIONAL_GAIN * (yAngleError);
+  yCorrection = - Y_PROPORTIONAL_GAIN * (yAngleError);
 }
 
 void setup()
@@ -76,8 +75,6 @@ void setup()
   
   setDirection(_PIN7, _INPUT);
   setDirection(_A0, _INPUT);
-  setDirection(_A1, _INPUT);
-  setDirection(_A2, _INPUT);
   
   while(1)
   {
@@ -88,17 +85,21 @@ void setup()
       while(digitalInput(_PIN7))
       {
         //Potentiometers to addjust constants; Not for final quadcopter.
-        X_PROPORTIONAL_GAIN = ((analogInput(_A0)/ 2.5) - 1) / 10.0 + 0.5151515007;
-        X_INTEGRAL_GAIN = ((analogInput(_A1) / 2.5) - 1) / 100000.0 + 0.0000537634;
-        X_DERIVATIVE_GAIN = 0;//((analogInput(_A2) - 2.5) / 2.5);
-        
+        X_PROPORTIONAL_GAIN = (analogInput(_A0)/ 5.0) / 4.0;
+        X_INTEGRAL_GAIN = 0;//((analogInput(_A0) / 2.5)) / 10000.0;
+        X_DERIVATIVE_GAIN = 0;//((analogInput(_A0) / 2.5));
         
         readI2CAccelerometer(accel);
         
         updateCorrection(accel);
         
-        setMotors(0, 0, 0.75 - yCorrection, 0.75 + yCorrection);
+        setMotors(0, 0, 0.25 - yCorrection, 0.25 + yCorrection);
+        //Serial.println(0.75 + yCorrection);
+        
       }
+      Serial.println(X_PROPORTIONAL_GAIN, 10);
+      Serial.println(X_INTEGRAL_GAIN, 10);
+      Serial.println(X_DERIVATIVE_GAIN, 10);
     }
     readI2CAccelerometer(accel);
     updateSetPointAndCorrection(0, 0, accel);
