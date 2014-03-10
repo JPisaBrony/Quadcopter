@@ -35,21 +35,21 @@ void updateCorrection(double accelerometerData[])
 
   Serial.print(time);
   Serial.print(',');
-  Serial.print(yAnglePV);
+  Serial.print(yAnglePV, 5);
   Serial.print(',');
-  Serial.print(yAngleError);
+  Serial.print(yAngleError, 5);
   Serial.print(',');
-  Serial.print(integralYAngleError);
+  Serial.print(integralYAngleError, 5);
   Serial.print(',');
-  Serial.print(yDerivative);
+  Serial.print(yDerivative, 5);
   Serial.print(',');
-  Serial.print(yP);
+  Serial.print(yP, 5);
   Serial.print(',');
-  Serial.print(yI);
+  Serial.print(yI, 5);
   Serial.print(',');
-  Serial.print(yD);
+  Serial.print(yD, 5);
   Serial.print(',');
-  Serial.println(yCorrection);
+  Serial.print(yCorrection, 5);
 }
 
 void updateSetPointAndCorrection(double xAngle, double yAngle, double accelerometerData[])
@@ -84,20 +84,23 @@ void setup()
       while(digitalInput(_PIN7))
       {
         //Potentiometers to addjust constants; Not for final quadcopter.
-        Y_PROPORTIONAL_GAIN = (analogInput(_A0)/ 5.0) / 4.0;
-        Y_INTEGRAL_GAIN = 0;//((analogInput(_A0) / 2.5)) / 10000.0;
-        Y_DERIVATIVE_GAIN = 0;//((analogInput(_A0) / 2.5));
+        Y_PROPORTIONAL_GAIN = 0.0374103943;//((analogInput(_A0)/ 2.5)-1) / 16.0;
+        Y_INTEGRAL_GAIN = 4.765655329E-5;//((analogInput(_A0) / 5.0)) / 10000.0;
+        Y_DERIVATIVE_GAIN = 2.561;//analogInput(_A0) * 4;
         
         readI2CAccelerometer(accel);
         
         updateCorrection(accel);
+        Serial.print(',');
+        Serial.print(Y_PROPORTIONAL_GAIN, 10);
+        Serial.print(',');
+        Serial.print(Y_INTEGRAL_GAIN, 10);
+        Serial.print(',');
+        Serial.println(Y_DERIVATIVE_GAIN, 10);
         
-        setMotors(0, 0, 0.25 + yCorrection, 0.25 - yCorrection);
+        setMotors(0, 0, 0.5 + yCorrection, 0.5 - yCorrection);
         
       }
-      Serial.println(Y_PROPORTIONAL_GAIN, 10);
-      Serial.println(Y_INTEGRAL_GAIN, 10);
-      Serial.println(Y_DERIVATIVE_GAIN, 10);
     }
     readI2CAccelerometer(accel);
     updateSetPointAndCorrection(0, 0, accel);

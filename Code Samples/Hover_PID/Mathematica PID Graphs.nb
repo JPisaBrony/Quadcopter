@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       157,          7]
-NotebookDataLength[     12633,        249]
-NotebookOptionsPosition[     12389,        236]
-NotebookOutlinePosition[     12732,        251]
-CellTagsIndexPosition[     12689,        248]
+NotebookDataLength[     19268,        449]
+NotebookOptionsPosition[     19024,        436]
+NotebookOutlinePosition[     19367,        451]
+CellTagsIndexPosition[     19324,        448]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -23,7 +23,7 @@ Cell[BoxData[{
   RowBox[{
    RowBox[{
    "file", " ", "=", " ", 
-    "\"\<C:\\\\Users\\\\Owner\\\\Desktop\\\\pid_data.csv\>\""}], ";"}], 
+    "\"\<C:\\\\Users\\\\Owner\\\\Desktop\\\\SensorData.csv\>\""}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"FlopperData", " ", "=", " ", 
@@ -38,85 +38,279 @@ Cell[BoxData[{
    "Print", "[", "\"\<Data Imported as \\\"FlopperData\\\"\>\"", "]"}], ";"}],
    "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"yPGain", " ", "=", " ", 
+  RowBox[{"dTime", " ", "=", " ", 
    RowBox[{"FlopperData", "[", 
     RowBox[{"[", "1", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"yIGain", " ", "=", " ", 
+  RowBox[{"yAnglePV", " ", "=", " ", 
    RowBox[{"FlopperData", "[", 
     RowBox[{"[", "2", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"yDGain", " ", "=", " ", 
+  RowBox[{"yAngleError", " ", "=", " ", 
    RowBox[{"FlopperData", "[", 
     RowBox[{"[", "3", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"yAngle", " ", "=", " ", 
+  RowBox[{"integralYAngleError", "=", " ", 
    RowBox[{"FlopperData", "[", 
     RowBox[{"[", "4", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"yAngleDerivitive", " ", "=", " ", 
-   RowBox[{"FlopperData", "[", 
-    RowBox[{"[", "5", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{" ", 
   RowBox[{
-   RowBox[{"yAngleIntegral", "=", " ", 
+   RowBox[{"yDerivative", " ", "=", " ", 
     RowBox[{"FlopperData", "[", 
-     RowBox[{"[", "6", "]"}], "]"}]}], ";"}]}], "\[IndentingNewLine]", 
+     RowBox[{"[", "5", "]"}], "]"}]}], ";"}]}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"yP", " ", "=", " ", 
    RowBox[{"FlopperData", "[", 
-    RowBox[{"[", "7", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+    RowBox[{"[", "6", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{" ", 
   RowBox[{
    RowBox[{"yI", "=", " ", 
     RowBox[{"FlopperData", "[", 
-     RowBox[{"[", "8", "]"}], "]"}]}], ";"}]}], "\[IndentingNewLine]", 
+     RowBox[{"[", "7", "]"}], "]"}]}], ";"}]}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"yD", " ", "=", " ", 
    RowBox[{"FlopperData", "[", 
+    RowBox[{"[", "8", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"yCorrection", " ", "=", " ", 
+   RowBox[{"FlopperData", "[", 
     RowBox[{"[", "9", "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
+  RowBox[{"yProportionalGain", " ", "=", " ", 
+   RowBox[{"FlopperData", "[", 
+    RowBox[{"[", "10", "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
+  RowBox[{"yIntegralGain", " ", "=", " ", 
+   RowBox[{"FlopperData", "[", 
+    RowBox[{"[", "11", "]"}], "]"}]}], ";"}], "\n", 
+ RowBox[{
   RowBox[{
-   RowBox[{"yCorrection", " ", "=", " ", 
+   RowBox[{"yDerivativeGain", " ", "=", " ", 
     RowBox[{"FlopperData", "[", 
-     RowBox[{"[", "10", "]"}], "]"}]}], ";"}], 
+     RowBox[{"[", "12", "]"}], "]"}]}], ";"}], 
   "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
  RowBox[{
-  RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yPGain", "]"}], "]"}], 
+  RowBox[{
+   RowBox[{"time", " ", "=", " ", 
+    RowBox[{
+     RowBox[{"Accumulate", "[", "dTime", "]"}], "/", "1000"}]}], ";"}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Time Differential\>\"", "]"}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yIGain", "]"}], "]"}], 
+   RowBox[{"ListPlot", "[", "dTime", "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Time\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"ListPlot", "[", "time", "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Angle\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yAnglePV", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Angle Error\>\"", "]"}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yDGain", "]"}], "]"}], 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yAngleError", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Integral\>\"", "]"}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yAngle", "]"}], "]"}], 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"integralYAngleError", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Derivative\>\"", "]"}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yAngleIntegral", "]"}], "]"}], 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yDerivative", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<P Component\>\"", "]"}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yAngleDerivitive", " ", "]"}], "]"}], 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yP", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<I Component\>\"", "]"}], 
   ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yP", "]"}], "]"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yI", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<D Component\>\"", "]"}], 
+  ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yI", "]"}], "]"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yD", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Total Correction Value\>\"", "]"}], 
+  ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yD", "]"}], "]"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yCorrection", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<P Gain\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
  RowBox[{
   RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", "yCorrection", "]"}], "]"}], ";"}]}], "Input",
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yProportionalGain", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<I Gain\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yIntegralGain", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<D Gain\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"ListPlot", "[", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"time", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], ",", 
+        RowBox[{"yDerivativeGain", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{"i", ",", 
+        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", "\"\<Total Time\>\"", "]"}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"Print", "[", 
+   RowBox[{"time", "[", 
+    RowBox[{"[", 
+     RowBox[{"Length", "[", "time", "]"}], "]"}], "]"}], "]"}], 
+  ";"}]}], "Input",
  CellChangeTimes->{{3.5946470146022196`*^9, 3.5946470671902275`*^9}, {
    3.594647099525077*^9, 3.59464710482038*^9}, {3.5946471453566985`*^9, 
    3.59464715884547*^9}, {3.594647243788328*^9, 3.5946472440663443`*^9}, {
@@ -232,7 +426,13 @@ Cell[BoxData[{
    3.601992783026537*^9, 3.6019928038507285`*^9}, {3.601993006000291*^9, 
    3.601993006420315*^9}, {3.6019930469616337`*^9, 3.6019930793564863`*^9}, {
    3.6019931877996893`*^9, 3.601993188273716*^9}, {3.6019951752613335`*^9, 
-   3.601995175588934*^9}}]
+   3.601995175588934*^9}, {3.603469852097534*^9, 3.6034700444315357`*^9}, {
+   3.603470525121029*^9, 3.603470806702135*^9}, {3.6034708382599397`*^9, 
+   3.603470887530758*^9}, {3.603471176348277*^9, 3.603471324513752*^9}, {
+   3.6034721879501376`*^9, 3.6034721922273827`*^9}, {3.6034725526059947`*^9, 
+   3.603472558192314*^9}, {3.6034731173052936`*^9, 3.6034732708800774`*^9}, {
+   3.603475795201461*^9, 3.603475809803296*^9}, {3.6034763613008394`*^9, 
+   3.603476374899617*^9}}]
 },
 WindowSize->{1350, 611},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
@@ -250,7 +450,7 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[557, 20, 11828, 214, 552, "Input"]
+Cell[557, 20, 18463, 414, 992, "Input"]
 }
 ]
 *)
