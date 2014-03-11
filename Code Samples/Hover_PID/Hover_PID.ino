@@ -80,6 +80,8 @@ void setup()
     if(digitalInput(_PIN7))
     {
       _delay_ms(5000);
+      readI2CAccelerometer(accel);
+      updateSetPointAndCorrection(0, 0, accel);//set the starting point
       
       while(digitalInput(_PIN7))
       {
@@ -102,8 +104,6 @@ void setup()
         
       }
     }
-    readI2CAccelerometer(accel);
-    updateSetPointAndCorrection(0, 0, accel);
     stopMotors();
     //Serial.println("Flip the switch to start.");
   }
