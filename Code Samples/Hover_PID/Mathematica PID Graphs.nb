@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       157,          7]
-NotebookDataLength[     19268,        449]
-NotebookOptionsPosition[     19024,        436]
-NotebookOutlinePosition[     19367,        451]
-CellTagsIndexPosition[     19324,        448]
+NotebookDataLength[     17356,        389]
+NotebookOptionsPosition[     17112,        376]
+NotebookOutlinePosition[     17455,        391]
+CellTagsIndexPosition[     17412,        388]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -250,66 +250,6 @@ Cell[BoxData[{
       RowBox[{"{", 
        RowBox[{"i", ",", 
         RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", "\"\<P Gain\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", 
-    RowBox[{"Table", "[", 
-     RowBox[{
-      RowBox[{"{", 
-       RowBox[{
-        RowBox[{"time", "[", 
-         RowBox[{"[", "i", "]"}], "]"}], ",", 
-        RowBox[{"yProportionalGain", "[", 
-         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
-      RowBox[{"{", 
-       RowBox[{"i", ",", 
-        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", "\"\<I Gain\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", 
-    RowBox[{"Table", "[", 
-     RowBox[{
-      RowBox[{"{", 
-       RowBox[{
-        RowBox[{"time", "[", 
-         RowBox[{"[", "i", "]"}], "]"}], ",", 
-        RowBox[{"yIntegralGain", "[", 
-         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
-      RowBox[{"{", 
-       RowBox[{"i", ",", 
-        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", "\"\<D Gain\>\"", "]"}], ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", 
-   RowBox[{"ListPlot", "[", 
-    RowBox[{"Table", "[", 
-     RowBox[{
-      RowBox[{"{", 
-       RowBox[{
-        RowBox[{"time", "[", 
-         RowBox[{"[", "i", "]"}], "]"}], ",", 
-        RowBox[{"yDerivativeGain", "[", 
-         RowBox[{"[", "i", "]"}], "]"}]}], "}"}], ",", 
-      RowBox[{"{", 
-       RowBox[{"i", ",", 
-        RowBox[{"Length", "[", "time", "]"}]}], "}"}]}], "]"}], "]"}], "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", "\"\<Total Time\>\"", "]"}], 
-  ";"}], "\[IndentingNewLine]", 
- RowBox[{
-  RowBox[{"Print", "[", 
-   RowBox[{"time", "[", 
-    RowBox[{"[", 
-     RowBox[{"Length", "[", "time", "]"}], "]"}], "]"}], "]"}], 
   ";"}]}], "Input",
  CellChangeTimes->{{3.5946470146022196`*^9, 3.5946470671902275`*^9}, {
    3.594647099525077*^9, 3.59464710482038*^9}, {3.5946471453566985`*^9, 
@@ -432,7 +372,7 @@ Cell[BoxData[{
    3.6034721879501376`*^9, 3.6034721922273827`*^9}, {3.6034725526059947`*^9, 
    3.603472558192314*^9}, {3.6034731173052936`*^9, 3.6034732708800774`*^9}, {
    3.603475795201461*^9, 3.603475809803296*^9}, {3.6034763613008394`*^9, 
-   3.603476374899617*^9}}]
+   3.603476374899617*^9}, {3.6036516362054205`*^9, 3.6036516447299085`*^9}}]
 },
 WindowSize->{1350, 611},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
@@ -450,7 +390,7 @@ CellTagsIndex->{}
 *)
 (*NotebookFileOutline
 Notebook[{
-Cell[557, 20, 18463, 414, 992, "Input"]
+Cell[557, 20, 16551, 354, 832, "Input"]
 }
 ]
 *)
