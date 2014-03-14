@@ -31,25 +31,29 @@ void updateCorrection(double accelerometerData[], double gyroData[])
   xCorrection = xP + xI + xD;
   yCorrection = yP + yI + yD;
 
-  /*
   Serial.print(time);
   Serial.print(',');
-  Serial.print(yAnglePV, 5);
+  Serial.print(xAnglePV, 5);
   Serial.print(',');
-  Serial.print(yAngleError, 5);
+  Serial.print(xAngleError, 5);
   Serial.print(',');
-  Serial.print(integralYAngleError, 5);
+  Serial.print(integralXAngleError, 5);
   Serial.print(',');
-  Serial.print(yDerivative, 5);
+  Serial.print(xDerivative, 5);
   Serial.print(',');
-  Serial.print(yP, 5);
+  Serial.print(xP, 5);
   Serial.print(',');
-  Serial.print(yI, 5);
+  Serial.print(xI, 5);
   Serial.print(',');
-  Serial.print(yD, 5);
+  Serial.print(xD, 5);
   Serial.print(',');
-  Serial.print(yCorrection, 5);
-  */
+  Serial.print(xCorrection, 5);
+  Serial.print(',');
+  Serial.print(X_PROPORTIONAL_GAIN, 5);
+  Serial.print(',');
+  Serial.print(X_INTEGRAL_GAIN, 5);
+  Serial.print(',');
+  Serial.println(X_DERIVATIVE_GAIN, 5);
 }
 
 void updateSetPointAndCorrection(double xAngle, double yAngle, double accelerometerData[], double gyroData[])
@@ -74,15 +78,22 @@ void setup()
       _delay_ms(5000);
       timeDifferential = 0;//to prevent bad things from happening
       readI2CAccelerometer(accel);
+      readI2CGyroscope(gyro);
       updateSetPointAndCorrection(0, 0, accel, gyro);
       
       while(digitalInput(_PIN7))
-      {        
+      {
+        
+        X_PROPORTIONAL_GAIN = analogInput(_A0) / 10;
+        X_INTEGRAL_GAIN = 0;
+        X_DERIVATIVE_GAIN = 0;
+
+        
         readI2CAccelerometer(accel);
         readI2CGyroscope(gyro);
         updateCorrection(accel, gyro);
                 
-        setMotors(0, 0, 0.75 + yCorrection, 0.75 - yCorrection);
+        setMotors(0.5 - xCorrection, 0.5 + xCorrection, 0.5 + yCorrection, 0.5 - yCorrection);
         
       }
     }

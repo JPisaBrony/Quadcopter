@@ -756,10 +756,6 @@ int readI2CGyroscope(double axes[])
 	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]) - 90.31205526954072  -  0.010700316729624036 * temperature  -  4.5907900000000004E-8 * temperature * temperature  +  2.1021177699990898E-11 * temperature * temperature * temperature  +  5.094010266748168E-16 * temperature * temperature * temperature * temperature;
 	axes[2] = twoCharToInt(readBuffer[6], readBuffer[7]) - 35.15564001714997  +  0.00041568193715910877 * temperature  +  9.29453E-8 * temperature * temperature  +  1.8663020031915918E-12 * temperature * temperature * temperature  +  1.1493123515668173E-17 * temperature * temperature * temperature * temperature;
 	
-	//*  fix this area!!!
-	axes[3] = temperature;
-	//*/
-	
 	return 1;
 }
 
