@@ -445,6 +445,8 @@ int twoCharToInt(unsigned char high, unsigned char low)
 	return val;
 }
 
+#include <Arduino.h>
+
 int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
 {
 	//set the bit rate for the processor
@@ -622,6 +624,28 @@ int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
 	
 	writeI2C(gyroAddress, writeBuffer, 1);//not sure if necessary
 	
+	unsigned char readBuffer[22];
+	writeBuffer[0] = bmpCalibrationCoefficients;
+	
+	statusCode = writeI2C(bmpAddress, writeBuffer, 1);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	
+	statusCode = readI2C(bmpAddress, readBuffer, 22);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	
+	for(int i = 0; i < 11; i++)
+	{
+		if(! readBuffer[2 * i] || readBuffer[2 * i + 1])
+			return 2;
+		if(4 <= i && i <= 6)
+			barometerCoefficient[i] = (unsigned int)twoCharToInt(readBuffer[2 * i], readBuffer[2 * i + 1]);
+		else
+			barometerCoefficient[i] = twoCharToInt(readBuffer[2 * i], readBuffer[2 * i + 1]);
+		Serial.println(barometerCoefficient[i]);
+	}
+	
 	return 1;//if everything happened as expected, return 1
 }
 
@@ -752,6 +776,7 @@ int readI2CGyroscope(double axes[])
 	
 	int temperature = twoCharToInt(readBuffer[0], readBuffer[1]);
 	
+	//TODO Recalibrate this. Values not centered at zero.
 	axes[0] = twoCharToInt(readBuffer[2], readBuffer[3]) + 154.9817501895265  +  0.004000508727186314 * temperature  -  8.23851E-8 * temperature * temperature  -  9.005870015903617E-12 * temperature * temperature * temperature  -  1.656470138597602E-16 * temperature * temperature * temperature * temperature;
 	axes[1] = twoCharToInt(readBuffer[4], readBuffer[5]) - 90.31205526954072  -  0.010700316729624036 * temperature  -  4.5907900000000004E-8 * temperature * temperature  +  2.1021177699990898E-11 * temperature * temperature * temperature  +  5.094010266748168E-16 * temperature * temperature * temperature * temperature;
 	axes[2] = twoCharToInt(readBuffer[6], readBuffer[7]) - 35.15564001714997  +  0.00041568193715910877 * temperature  +  9.29453E-8 * temperature * temperature  +  1.8663020031915918E-12 * temperature * temperature * temperature  +  1.1493123515668173E-17 * temperature * temperature * temperature * temperature;
@@ -759,43 +784,74 @@ int readI2CGyroscope(double axes[])
 	return 1;
 }
 
-int readI2CBarometer(double* altitude)
+int readI2CBarometer(double* elevation)
 {
 	unsigned char writeBuffer[2] = {bmpControlRegister, bmpTemperature};
 	unsigned char readBuffer[2];
-	int statusCode = writeI2C(bmpAddress, writeBuffer, 2);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	int statusCode = writeI2C(bmpAddress, writeBuffer, 2);//Write so that the sensor prepares the temperature data
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	writeBuffer[0] = bmpReadRegisters;
-	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature data
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 6 registers starting at magXoutH
+	_delay_ms(25);
+	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 2-byte value for temperatue
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 		
-	int temperature = twoCharToInt(readBuffer[0], readBuffer[1]);//Store x data
+	long ut = (unsigned int)twoCharToInt(readBuffer[0], readBuffer[1]);//merge the bytes into temperature
+	
+	Serial.println(ut);
 	
 	writeBuffer[0] = bmpControlRegister;
-	writeBuffer[1] = bmpStandardPressure;	
-	statusCode = writeI2C(bmpAddress, writeBuffer, 2);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	writeBuffer[1] = bmpStandardPressure;//if you change the the oversampling on the pressure, make sure you edit the pressure and altitude calculation formulas
+	statusCode = writeI2C(bmpAddress, writeBuffer, 2);//Write so that the sensor prepares the pressure data
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	writeBuffer[0] = bmpReadRegisters;
-	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 6 registers starting at magXoutH
+	_delay_ms(25);
+	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 2-byte value for pressure
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	
-	int pressure = twoCharToInt(readBuffer[0], readBuffer[1]);
+	long up = (unsigned int)twoCharToInt(readBuffer[0], readBuffer[1]);//merge the bytes into the pressure
+	Serial.println(up);
+	Serial.println();
 	
-	//add altitude calculation
+	long x1 = (ut - barometerCoefficient[AC6] * barometerCoefficient[AC5])/0x8000;
+	long x2 = (barometerCoefficient[MC] * 0x800) / (x1 + barometerCoefficient[MD]);
+	long b5 = x1 + x2;
+	long t = (b5 + 8) / 0x10;//temperature in 0.1 C (divide by 10 to get temperature in C)
+	long b6 = b5 - 4000;
+	x1 = (barometerCoefficient[B2] * (b6 * b6 / 0x1000)) / 0x800;
+	x2 = barometerCoefficient[AC2] * b6 / 0x800;
+	long x3 = x1 + x2;
+	long b3 = (barometerCoefficient[AC1] * 4 + x3);
+	x1 = barometerCoefficient[AC3] * b6 / 0x2000;
+	x2 = (barometerCoefficient[B1] * (b6 * b6 / 0x1000)) / 0x10000;
+	x3 = (x1 + x2 + 2) / 0x4;
+	unsigned long b4 = barometerCoefficient[AC4] * (unsigned long)(x3 + 32768) / 0x8000;
+	unsigned long b7 = ((unsigned long)up - b3) * 50000;
+	long p;
+	if(b7 < 0x80000000)
+		p = (b7 * 2) / b4;
+	else
+		p = (b7 / b4) * 2;
+	x1 = (p / 0x100) * (p / 0x100);
+	x1 = (x1 * 3038) / 0x10000;
+	x2 = -7357 * p / 0x10000;
+	p += (x1 + x2 + 3791) / 0x10; //pressure in pascals
 	
-	*altitude = temperature;
+	*elevation = 44330 * (1 - pow(p / STANDARD_SEA_LEVEL_PRESSURE, 1.0 / 5.255)) - initialAltitude;
 	
-	//return 1;
+	Serial.println(*elevation);
+	Serial.println();
+	
+	return 1;
 }
 
 void initializeGPS()
@@ -888,7 +944,7 @@ void parseGPSPacket()
 	}
 }
 
-void initializeQuadcopter()
+int initializeQuadcopter()
 {
 	resetSetupRegisters();//reset all the register values to 256
 	
@@ -920,7 +976,9 @@ void initializeQuadcopter()
 	gyroscopeRegister[gyroDLPF_FS] = 0b00011000;
 	
 	
-	initializeTWI(100, 0);//initialize two wire interface with a bit rate of 100 and bit rate prescaler of 0
+	int statusCode = initializeTWI(100, 0);//initialize two wire interface with a bit rate of 100 and bit rate prescaler of 0
+	if(statusCode != 1)
+		return statusCode;
 	
 	//these pins are for PWM output to the motor controllers
 	setDirection(_PIN5, _OUTPUT);
@@ -938,7 +996,14 @@ void initializeQuadcopter()
 	OCR0A = 124;//reset every 1000th of a second
 	TIMSK0 = 0b00000010;//enable interrupts every 1000th of a second
 	
+	initialAltitude = 0;
+	statusCode = readI2CBarometer(&initialAltitude);
+	if(statusCode != 1)
+		return statusCode;
+	
 	//Moar Initialization!
+	
+	return 1;
 }
 
 void setMotors(double xp, double xn, double yp, double yn)

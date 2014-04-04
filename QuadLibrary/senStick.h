@@ -80,6 +80,7 @@
 #define bmpAddress 0x77
 #define bmpControlRegister 0xF4
 #define bmpReadRegisters 0xF6
+#define bmpCalibrationCoefficients 0xAA
 #define bmpTemperature 0x2E
 #define bmpLowPowerPressure 0x34
 #define bmpStandardPressure 0x74

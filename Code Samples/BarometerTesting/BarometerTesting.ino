@@ -8,13 +8,14 @@ void setup()
   
   delay(4000);
   Serial.begin(9600);
-  initializeQuadcopter();
-
-  readI2C(bmpAddress, readBuffer, 32);  
+  Serial.println(initializeQuadcopter());
+  
+  Serial.print("Initial Altitude");
+  Serial.println(initialAltitude);
+  
   while(1)
   {
   readI2CBarometer(&altitude);
-  Serial.println(altitude);
   _delay_ms(100);
   }
 }

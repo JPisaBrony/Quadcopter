@@ -45,7 +45,23 @@ unsigned int compassRegister[NUM_COMPASS_REGISTERS];
 unsigned int accelerometerRegister[NUM_ACCELEROMETER_REGISTERS];
 unsigned int gyroscopeRegister[NUM_GYROSCOPE_REGISTERS];
 
-//used in the timer zero interupt. counts the number of units time since it was last reset.
+//retrived in initializeTWI. Represents the individual coefficents of the sensor being used. Used in the calculation of altitude in readI2CBarometer
+long barometerCoefficient[11];
+#define AC1 0
+#define AC2 1
+#define AC3 2
+#define AC4 3
+#define AC5 4
+#define AC6 5
+#define B1 6
+#define B2 7
+#define MB 8
+#define MC 9
+#define MD 10
+#define STANDARD_SEA_LEVEL_PRESSURE 101325.0
+double initialAltitude;
+
+//used in the timer0 interupt. counts the number of units time since it was last reset.
 unsigned long timeDifferential;
 
 //Stores the packet of information currently being received from the serial port
@@ -169,7 +185,7 @@ initializeTWI(100, 0);
 
 Sets the TWBR register to 100 and Configuration Register A in the magnetic compass to 0x10.
 
-If resetSetupRegisters() is not called, zeros will be written to all the registers.
+If resetSetupRegisters() is not called, zeros will be written to all the registers. (or previous values in the arrays);
 */
 int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler);
 
@@ -218,13 +234,15 @@ int readI2CAccelerometer(double axes[]);
 Reads from the gyroscope. Writes x, y, and z values into the array passed. axes[0] == x, axes[1] == y, axes[2] == z.
 Important that the array passed has at least 3 elements or else undefined things may occur in the program.
 Compensates for temperature using experimental data.
-(real x gyro value) = (x gyro value) + 0.00266313 * temperature + 142.52507234
-(real y gyro value) = (y gyro value) - 0.00100571 * temperature - 4.60342794
-(real z gyro value) = (z gyro value) - 0.00111324 * temperature - 42.44208742
 
 returns 1 if successful, a status code if unsuccessful. Corresponds to the status codes from TWSR in the ATmega32u4 datasheet.
 */
 int readI2CGyroscope(double axes[]);
+
+/*
+Reads the temperature and pressure from the Barometer. Calculates the approximate altitude and writes it to the address of altitude.
+*/
+int readI2CBarometer(double* elevation);
 
 /*
 Configures the registers in the USART to receive data from a GPS at 4800 bps
@@ -245,7 +263,7 @@ void parseGPSPacket();
 /*
 initializes everything that the quadcopter needs to start flying
 */
-void initializeQuadcopter();
+int initializeQuadcopter();
 
 /*
 sets the duty cycle on all four motors at once
