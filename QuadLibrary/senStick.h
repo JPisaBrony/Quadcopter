@@ -76,4 +76,14 @@
 #define gyroZoutL 0x22
 #define gyroPWR_MGM 0x3E
 
+//BMP085 Barometric Pressure Sensor
+#define bmpAddress 0x77
+#define bmpControlRegister 0xF4
+#define bmpReadRegisters 0xF6
+#define bmpTemperature 0x2E
+#define bmpLowPowerPressure 0x34
+#define bmpStandardPressure 0x74
+#define bmpHighResPressure 0xB4
+#define bmpUltraHighResPressure 0xF4
+
 #endif

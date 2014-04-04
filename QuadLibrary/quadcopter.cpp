@@ -759,6 +759,45 @@ int readI2CGyroscope(double axes[])
 	return 1;
 }
 
+int readI2CBarometer(double* altitude)
+{
+	unsigned char writeBuffer[2] = {bmpControlRegister, bmpTemperature};
+	unsigned char readBuffer[2];
+	int statusCode = writeI2C(bmpAddress, writeBuffer, 2);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	writeBuffer[0] = bmpReadRegisters;
+	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 6 registers starting at magXoutH
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+		
+	int temperature = twoCharToInt(readBuffer[0], readBuffer[1]);//Store x data
+	
+	writeBuffer[0] = bmpControlRegister;
+	writeBuffer[1] = bmpStandardPressure;	
+	statusCode = writeI2C(bmpAddress, writeBuffer, 2);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	writeBuffer[0] = bmpReadRegisters;
+	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the following read begins from register magXoutH (the magXoutH comes from what writeBuffer is initialized to);
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 6 registers starting at magXoutH
+	if(statusCode != 1)//check the resulting status code
+		return statusCode;
+	
+	int pressure = twoCharToInt(readBuffer[0], readBuffer[1]);
+	
+	//add altitude calculation
+	
+	*altitude = temperature;
+	
+	//return 1;
+}
+
 void initializeGPS()
 {
 	while(!(UCSR1A & 0b00100000));//verify the transfer buffer is empty before starting
