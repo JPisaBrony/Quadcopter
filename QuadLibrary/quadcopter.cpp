@@ -445,8 +445,6 @@ int twoCharToInt(unsigned char high, unsigned char low)
 	return val;
 }
 
-#include <Arduino.h>
-
 int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
 {
 	//set the bit rate for the processor
@@ -637,13 +635,12 @@ int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
 	
 	for(int i = 0; i < 11; i++)
 	{
-		if(! readBuffer[2 * i] || readBuffer[2 * i + 1])
+		if(! readBuffer[2 * i] && ! readBuffer[2 * i + 1])
 			return 2;
 		if(4 <= i && i <= 6)
 			barometerCoefficient[i] = (unsigned int)twoCharToInt(readBuffer[2 * i], readBuffer[2 * i + 1]);
 		else
 			barometerCoefficient[i] = twoCharToInt(readBuffer[2 * i], readBuffer[2 * i + 1]);
-		Serial.println(barometerCoefficient[i]);
 	}
 	
 	return 1;//if everything happened as expected, return 1
@@ -795,14 +792,11 @@ int readI2CBarometer(double* elevation)
 	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature data
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	_delay_ms(25);
-	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 2-byte value for temperatue
+	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 2-byte value for temperature
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 		
 	long ut = (unsigned int)twoCharToInt(readBuffer[0], readBuffer[1]);//merge the bytes into temperature
-	
-	Serial.println(ut);
 	
 	writeBuffer[0] = bmpControlRegister;
 	writeBuffer[1] = bmpStandardPressure;//if you change the the oversampling on the pressure, make sure you edit the pressure and altitude calculation formulas
@@ -813,14 +807,11 @@ int readI2CBarometer(double* elevation)
 	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-	_delay_ms(25);
 	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 2-byte value for pressure
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	
 	long up = (unsigned int)twoCharToInt(readBuffer[0], readBuffer[1]);//merge the bytes into the pressure
-	Serial.println(up);
-	Serial.println();
 	
 	long x1 = (ut - barometerCoefficient[AC6] * barometerCoefficient[AC5])/0x8000;
 	long x2 = (barometerCoefficient[MC] * 0x800) / (x1 + barometerCoefficient[MD]);
@@ -847,9 +838,6 @@ int readI2CBarometer(double* elevation)
 	p += (x1 + x2 + 3791) / 0x10; //pressure in pascals
 	
 	*elevation = 44330 * (1 - pow(p / STANDARD_SEA_LEVEL_PRESSURE, 1.0 / 5.255)) - initialAltitude;
-	
-	Serial.println(*elevation);
-	Serial.println();
 	
 	return 1;
 }

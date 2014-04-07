@@ -45,7 +45,7 @@ unsigned int compassRegister[NUM_COMPASS_REGISTERS];
 unsigned int accelerometerRegister[NUM_ACCELEROMETER_REGISTERS];
 unsigned int gyroscopeRegister[NUM_GYROSCOPE_REGISTERS];
 
-//retrived in initializeTWI. Represents the individual coefficents of the sensor being used. Used in the calculation of altitude in readI2CBarometer
+//retrived in initializeTWI. Represents the individual coefficients of the sensor being used. Used in the calculation of altitude in readI2CBarometer
 long barometerCoefficient[11];
 #define AC1 0
 #define AC2 1
