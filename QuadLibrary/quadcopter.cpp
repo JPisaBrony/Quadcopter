@@ -447,6 +447,10 @@ int twoCharToInt(unsigned char high, unsigned char low)
 
 int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
 {
+	setDirection(_PIN6, _INPUT);
+	setDirection(_PIN2, _INPUT);
+	setDirection(_PIN3, _INPUT);
+
 	//set the bit rate for the processor
 	TWBR = TWIBitRate;
 	TWSR = TWIBitRatePrescaler & 0x03;
@@ -790,7 +794,7 @@ int readI2CBarometer(double* elevation)
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	writeBuffer[0] = bmpReadRegisters;
-	_delay_ms(8);
+	while(!digitalInput(_PIN6));
 	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature data
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
@@ -805,7 +809,7 @@ int readI2CBarometer(double* elevation)
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	writeBuffer[0] = bmpReadRegisters;
-	_delay_ms(8);
+	while(!digitalInput(_PIN6));
 	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
