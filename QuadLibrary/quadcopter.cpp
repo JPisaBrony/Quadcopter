@@ -635,9 +635,10 @@ int initializeTWI(unsigned char TWIBitRate, unsigned char TWIBitRatePrescaler)
 	
 	for(int i = 0; i < 11; i++)
 	{
-		if(! readBuffer[2 * i] && ! readBuffer[2 * i + 1])
+		if((readBuffer[2 * i] == 0x00 && readBuffer[2 * i + 1] == 0x00) ||(readBuffer[2 * i] == 0xFF && readBuffer[2 * i + 1] == 0xFF))//if the 16 bit value == 0x0000 or 0xFFFF, there was an error
 			return 2;
-		if(4 <= i && i <= 6)
+			
+		if(3 <= i && i <= 5)
 			barometerCoefficient[i] = (unsigned int)twoCharToInt(readBuffer[2 * i], readBuffer[2 * i + 1]);
 		else
 			barometerCoefficient[i] = twoCharToInt(readBuffer[2 * i], readBuffer[2 * i + 1]);
@@ -789,13 +790,13 @@ int readI2CBarometer(double* elevation)
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	writeBuffer[0] = bmpReadRegisters;
+	_delay_ms(8);
 	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature data
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	statusCode = readI2C(bmpAddress, readBuffer, 2);//read the 2-byte value for temperature
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
-		
 	long ut = (unsigned int)twoCharToInt(readBuffer[0], readBuffer[1]);//merge the bytes into temperature
 	
 	writeBuffer[0] = bmpControlRegister;
@@ -804,6 +805,7 @@ int readI2CBarometer(double* elevation)
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
 	writeBuffer[0] = bmpReadRegisters;
+	_delay_ms(8);
 	statusCode = writeI2C(bmpAddress, writeBuffer, 1);//Write so that the sensor will read out the temperature
 	if(statusCode != 1)//check the resulting status code
 		return statusCode;
@@ -813,20 +815,21 @@ int readI2CBarometer(double* elevation)
 	
 	long up = (unsigned int)twoCharToInt(readBuffer[0], readBuffer[1]);//merge the bytes into the pressure
 	
-	long x1 = (ut - barometerCoefficient[AC6] * barometerCoefficient[AC5])/0x8000;
-	long x2 = (barometerCoefficient[MC] * 0x800) / (x1 + barometerCoefficient[MD]);
+	long x1 = ((ut - barometerCoefficient[bcAC6]) * barometerCoefficient[bcAC5])/0x8000;
+	long x2 = (barometerCoefficient[bcMC] * 0x800) / (x1 + barometerCoefficient[bcMD]);
 	long b5 = x1 + x2;
 	long t = (b5 + 8) / 0x10;//temperature in 0.1 C (divide by 10 to get temperature in C)
+	
 	long b6 = b5 - 4000;
-	x1 = (barometerCoefficient[B2] * (b6 * b6 / 0x1000)) / 0x800;
-	x2 = barometerCoefficient[AC2] * b6 / 0x800;
+	x1 = (barometerCoefficient[bcB2] * (b6 * b6 / 0x1000)) / 0x800;
+	x2 = barometerCoefficient[bcAC2] * b6 / 0x800;
 	long x3 = x1 + x2;
-	long b3 = (barometerCoefficient[AC1] * 4 + x3);
-	x1 = barometerCoefficient[AC3] * b6 / 0x2000;
-	x2 = (barometerCoefficient[B1] * (b6 * b6 / 0x1000)) / 0x10000;
+	long b3 = ((barometerCoefficient[bcAC1] * 4 + x3) + 2)/4;
+	x1 = barometerCoefficient[bcAC3] * b6 / 0x2000;
+	x2 = (barometerCoefficient[bcB1] * ((b6 * b6)/0x1000))/0x10000;
 	x3 = (x1 + x2 + 2) / 0x4;
-	unsigned long b4 = barometerCoefficient[AC4] * (unsigned long)(x3 + 32768) / 0x8000;
-	unsigned long b7 = ((unsigned long)up - b3) * 50000;
+	unsigned long b4 = barometerCoefficient[bcAC4] * (unsigned long)(x3 + 32768) / 0x8000;
+	unsigned long b7 = ((unsigned long)up - b3) * (50000);
 	long p;
 	if(b7 < 0x80000000)
 		p = (b7 * 2) / b4;

@@ -47,17 +47,17 @@ unsigned int gyroscopeRegister[NUM_GYROSCOPE_REGISTERS];
 
 //retrived in initializeTWI. Represents the individual coefficients of the sensor being used. Used in the calculation of altitude in readI2CBarometer
 long barometerCoefficient[11];
-#define AC1 0
-#define AC2 1
-#define AC3 2
-#define AC4 3
-#define AC5 4
-#define AC6 5
-#define B1 6
-#define B2 7
-#define MB 8
-#define MC 9
-#define MD 10
+#define bcAC1 0
+#define bcAC2 1
+#define bcAC3 2
+#define bcAC4 3
+#define bcAC5 4
+#define bcAC6 5
+#define bcB1 6
+#define bcB2 7
+#define bcMB 8
+#define bcMC 9
+#define bcMD 10
 #define STANDARD_SEA_LEVEL_PRESSURE 101325.0
 double initialAltitude;
 

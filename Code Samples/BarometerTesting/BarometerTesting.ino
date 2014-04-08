@@ -8,16 +8,24 @@ void setup()
   Serial.begin(9600);
   Serial.println(initializeQuadcopter());
   
-  unsigned char readBuffer[22];
   Serial.print("Initial Altitude: ");
   Serial.println(initialAltitude);
+
+  Serial.println();  
+  for(int i = 0; i < 11; i++)
+  {
+    Serial.println(barometerCoefficient[i]);
+  }
+  Serial.println();
   
-  while(1)
+  readI2CBarometer(&altitude);
+  
+  /*while(1)
   {
   readI2CBarometer(&altitude);
   _delay_ms(100);
   Serial.println(altitude);
-  }
+  }*/
 }
 
 void loop(){}
