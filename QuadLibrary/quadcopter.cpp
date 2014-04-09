@@ -786,7 +786,7 @@ int readI2CGyroscope(double axes[])
 	return 1;
 }
 
-int readI2CBarometer(double* elevation)
+int readI2CBarometer(double* altitude)
 {
 	unsigned char writeBuffer[2] = {bmpControlRegister, bmpTemperature};
 	unsigned char readBuffer[2];
@@ -844,7 +844,7 @@ int readI2CBarometer(double* elevation)
 	x2 = -7357 * p / 0x10000;
 	p += (x1 + x2 + 3791) / 0x10; //pressure in pascals
 	
-	*elevation = 44330 * (1 - pow(p / STANDARD_SEA_LEVEL_PRESSURE, 1.0 / 5.255)) - initialAltitude;
+	*altitude = 44330 * (1 - pow(p / STANDARD_SEA_LEVEL_PRESSURE, 1.0 / 5.255)) - initialAltitude;
 	
 	return 1;
 }
@@ -988,13 +988,29 @@ int initializeQuadcopter()
 	//initialize the timer interrupt
 	TCCR0A = 0b00000010;//No output, CTC
 	TCCR0B = 0b00000011;//CTC, Prescaler of 64
-	OCR0A = 124;//reset every 1000th of a second
+	OCR0A = 124;//reset every 2000th of a second
 	TIMSK0 = 0b00000010;//enable interrupts every 1000th of a second
 	
+	double altitudeI = 0;
+	double accelerationI[3];
+	
 	initialAltitude = 0;
-	statusCode = readI2CBarometer(&initialAltitude);
-	if(statusCode != 1)
-		return statusCode;
+	double altitudeAverage = 0;
+	accelerationDueToGravity = 0;
+	for(int i = 0; i < 100; i++)
+	{
+		statusCode = readI2CBarometer(&altitudeI);
+		if(statusCode != 1)
+			return statusCode;
+		statusCode = readI2CAccelerometer(accelerationI);
+		if(statusCode != 1)
+			return statusCode;
+		altitudeAverage += altitudeI;
+		accelerationDueToGravity += sqrt(accelerationI[0] * accelerationI[0] + accelerationI[1] * accelerationI[1] + accelerationI[2] * accelerationI[2]);
+	}
+	
+	initialAltitude = altitudeAverage / 100;
+	accelerationDueToGravity /= 100;
 	
 	//Moar Initialization!
 	

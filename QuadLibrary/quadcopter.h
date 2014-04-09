@@ -60,6 +60,7 @@ long barometerCoefficient[11];
 #define bcMD 10
 #define STANDARD_SEA_LEVEL_PRESSURE 101325.0
 double initialAltitude;
+double accelerationDueToGravity;
 
 //used in the timer0 interupt. counts the number of units time since it was last reset.
 unsigned long timeDifferential;
