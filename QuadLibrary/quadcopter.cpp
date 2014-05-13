@@ -844,7 +844,7 @@ int readI2CBarometer(double* altitude)
 	x2 = -7357 * p / 0x10000;
 	p += (x1 + x2 + 3791) / 0x10; //pressure in pascals
 	
-	*altitude = 44330 * (1 - pow(p / STANDARD_SEA_LEVEL_PRESSURE, 1.0 / 5.255)) - initialAltitude;
+	*altitude = 44330 * (1 - pow(p / STANDARD_SEA_LEVEL_PRESSURE, 1.0 / 5.255));
 	
 	return 1;
 }

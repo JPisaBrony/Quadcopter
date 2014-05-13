@@ -9,13 +9,13 @@ double Y_DERIVATIVE_GAIN = 25.1026401519;
 double HEADING_PROPORTIONAL_GAIN = 0;
 double HEADING_INTEGRAL_GAIN = 0;
 double HEADING_DERIVATIVE_GAIN = 0;
-double VELOCITY_PROPORTIONAL_GAIN = 0;
-double VELOCITY_INTEGRAL_GAIN = 0;
-double VELOCITY_DERIVATIVE_GAIN = 0;
+double ALTITUDE_PROPORTIONAL_GAIN = 0;
+double ALTITUDE_INTEGRAL_GAIN = 0;
+double ALTITUDE_DERIVATIVE_GAIN = 0;
 
-double ACCELEROMETER_LOW_PASS_FILTER_CONSTANT = 1.25;
-double GYROSCOPE_LOW_PASS_FILTER_CONSTANT = 1.25;
-double MAGNOMETER_LOW_PASS_FILTER_CONSTANT = 1.25;
+double ACCELEROMETER_LOW_PASS_FILTER_CONSTANT = 0.1;
+double GYROSCOPE_LOW_PASS_FILTER_CONSTANT = 0.5;
+double MAGNOMETER_LOW_PASS_FILTER_CONSTANT = 0.25;
 double BAROMETER_LOW_PASS_FILTER_CONSTANT = 3;
 
 double declination = 0;
@@ -23,7 +23,7 @@ double declination = 0;
 double accel[3], gyro[3], mag[3], altitude, oldAccel[3], oldGyro[3], oldMag[3], oldAltitude;
 
 double xAngleSP, yAngleSP, headingSP, altitudeSP;
-double xCorrection, yCorrection, hCorrection, vCorrection;
+double xCorrection, yCorrection, hCorrection, aCorrection;
 
 void updateCorrection(double accelData[], double gyroData[], double magData[], double *altitude)
 {
@@ -32,98 +32,57 @@ void updateCorrection(double accelData[], double gyroData[], double magData[], d
   static double xAnglePV, integralXAngleError;
   static double yAnglePV, integralYAngleError;
   static double headingPV, integralHeadingError;
-  static double integralVelocityError, previousIntegralVelocityError = 0;
+  static double altitudePV, previousAltitudePV = *altitude, integralAltitudeError;
 
   xAnglePV = atan2(accelData[0], accelData[2]);
   yAnglePV = atan2(accelData[1], accelData[2]);
   headingPV = (PI / 2) - atan2(accelData[2] * magData[0] - accelData[0] * magData[2], accelData[1] * magData[2] - accelData[2] * magData[1]);
   if(headingPV > PI)
     headingPV -= 2 * PI;
+  altitudePV = *altitude;
 
   double xAngleError = xAnglePV - xAngleSP;
   double yAngleError = yAnglePV - yAngleSP;
   double headingError = headingPV - headingSP;
+  double altitudeError = altitudePV - altitudeSP;
 
   double xP = X_PROPORTIONAL_GAIN * xAngleError;
   double yP = Y_PROPORTIONAL_GAIN * yAngleError;
   double hP = HEADING_PROPORTIONAL_GAIN * headingError;
+  double aP = ALTITUDE_PROPORTIONAL_GAIN * altitudeError;
 
   double xDerivative = -1.5E-6 * gyroData[1];
   double yDerivative = 1.5E-6 * gyroData[0];
   double headingDerivative = 1.5E-6 * gyroData[2];
-  double velocityDerivative = ((accel[2] > 0) - (accel[2] < 0)) * sqrt(accelData[0] * accelData[0] + accelData[1] * accelData[1] + accelData[2] * accelData[2]) - accelerationDueToGravity;
+  double altitudeDerivative = (altitudeError - previousAltitudePV)/time;
 
   double xD = X_DERIVATIVE_GAIN * xDerivative;
   double yD = Y_DERIVATIVE_GAIN * yDerivative;
   double hD = HEADING_DERIVATIVE_GAIN * headingDerivative;
-  double vD = VELOCITY_DERIVATIVE_GAIN * velocityDerivative;
+  double aD = ALTITUDE_DERIVATIVE_GAIN * altitudeDerivative;
 
   integralXAngleError += xAngleError * time;
   integralYAngleError += yAngleError * time;
   integralHeadingError += headingError * time;
-  integralVelocityError = *altitude - altitudeSP;
-
-  double velocityError = (integralVelocityError - previousIntegralVelocityError) / time;
-  double vP = VELOCITY_PROPORTIONAL_GAIN * velocityError;
-  previousIntegralVelocityError = integralVelocityError;
+  integralAltitudeError += altitudeError * time;
 
   double xI = X_INTEGRAL_GAIN * integralXAngleError;
   double yI = Y_INTEGRAL_GAIN * integralYAngleError;
   double hI = HEADING_INTEGRAL_GAIN * integralHeadingError;
-  double vI = VELOCITY_INTEGRAL_GAIN * integralVelocityError;
-
+  double aI = ALTITUDE_INTEGRAL_GAIN * integralAltitudeError;
+  
   xCorrection = xP + xI + xD;
   yCorrection = yP + yI + yD;
   hCorrection = hP + hI + hD;
-  vCorrection = vP + vI + vD;
-
-  if(vCorrection > 1)
-    vCorrection = 1;
-  else if(vCorrection < 0.25)
-    vCorrection = 0.25;
-
-  /*Serial.print(time);
-   Serial.print(',');
-   Serial.print(xAnglePV, 5);
-   Serial.print(',');
-   Serial.print(xAngleError, 5);
-   Serial.print(',');
-   Serial.print(integralXAngleError, 5);
-   Serial.print(',');
-   Serial.print(xDerivative, 5);
-   Serial.print(',');
-   Serial.print(xP, 5);
-   Serial.print(',');
-   Serial.print(xI, 5);
-   Serial.print(',');
-   Serial.print(xD, 5);
-   Serial.print(',');
-   Serial.print(xCorrection, 5);
-   Serial.print(',');
-   Serial.print(X_PROPORTIONAL_GAIN, 10);
-   Serial.print(',');
-   Serial.print(X_INTEGRAL_GAIN, 10);
-   Serial.print(',');
-   Serial.println(X_DERIVATIVE_GAIN, 10);
-   */
-
-  Serial.print("Time: ");
-  Serial.println(time);
-  Serial.print("X Angle: ");
-  Serial.println(xAnglePV, 6);
-  Serial.print("Y Angle: ");
-  Serial.println(yAnglePV, 6);
-  Serial.print("Heading: ");
-  Serial.println(headingPV, 6);
-  Serial.print("Altitude: ");
-  Serial.println(integralVelocityError, 6);
+  aCorrection = aP + aI + aD;
 }
 
-void updateSetPointAndCorrection(double xAngle, double yAngle,  double heading, double targetAltitude, double accelData[], double gyroData[], double magData[], double *altitude)
+void updateSetPointAndCorrection(double xAngle, double yAngle, double heading, double targetAltitude, double accelData[], double gyroData[], double magData[], double *altitude)
 {
   xAngleSP = xAngle;
   yAngleSP = yAngle;
   headingSP = heading + declination;
+  altitudeSP = targetAltitude;
   updateCorrection(accelData, gyroData, magData, altitude);
 }
 
@@ -156,11 +115,11 @@ void setup()
 
       while(digitalInput(_PIN7))
       {
-        /*
-        X_PROPORTIONAL_GAIN = analogInput(_A0) / 10;
-         X_INTEGRAL_GAIN = 0;
-         X_DERIVATIVE_GAIN = 0;
-         */
+
+        HEADING_PROPORTIONAL_GAIN = analogInput(_A0) / 10;
+        HEADING_INTEGRAL_GAIN = 0;
+        HEADING_DERIVATIVE_GAIN = 0;
+
 
         readI2CAccelerometer(accel);
         readI2CGyroscope(gyro);
@@ -174,17 +133,15 @@ void setup()
 
         updateCorrection(accel, gyro, mag, &altitude);
 
-        vCorrection = 0.5;
-        //hCorrection = 0;
+        aCorrection = 0.5;
+        hCorrection = 0;
+        yCorrection = 0;
 
-        //setMotors(vCorrection + hCorrection - xCorrection, vCorrection + hCorrection + xCorrection, vCorrection - hCorrection - yCorrection, vCorrection - hCorrection + yCorrection);
-        _delay_ms(250);
+        setMotors(aCorrection - hCorrection - xCorrection, aCorrection - hCorrection + xCorrection, aCorrection + hCorrection - yCorrection, aCorrection + hCorrection + yCorrection);
       }
     }
     stopMotors();
   }
 }
 
-void loop(){
-}
-
+void loop(){}
